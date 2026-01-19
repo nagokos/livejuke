@@ -1,0 +1,27 @@
+---
+services:
+  postgres:
+    image: postgres:16
+    container_name: livejuke-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: livejuke
+      POSTGRES_USER: livejuke
+      POSTGRES_PASSWORD: livejuke
+      TZ: Asia/Tokyo
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - livejuke_pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U livejuke -d livejuke"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  livejuke_pgdata:
