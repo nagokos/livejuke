@@ -39,6 +39,7 @@
           curl
           jq
           just
+          sqlx-cli
         ];
 
         apiPkgs =
