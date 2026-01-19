@@ -1,4 +1,3 @@
-# Justfile
 set dotenv-load := true
 
 compose_file := "infra/docker-compose.yml"
@@ -16,7 +15,7 @@ stop *services:
 down:
   {{compose}} down
 
-# データ含めて初期化（ボリューム削除）
+# データ含めて全初期化（ボリューム削除）
 reset:
   {{compose}} down -v
 
@@ -32,19 +31,39 @@ logs *services:
 psql:
   docker exec -it livejuke-postgres psql -U livejuke -d livejuke
 
-# postgresの起動を待つ（CI/スクリプト用）
+# postgresの起動を待つ
 wait-db:
   until {{compose}} exec -T postgres pg_isready -U livejuke; do sleep 1; done
+
+# マイグレーション実行
+migrate:
+  cd api && sqlx migrate run
+
+# マイグレーションファイル作成
+migrate-add name:
+  cd api && sqlx migrate add -r {{name}}
+
+migrate-rev:
+	cd api && sqlx migrate revert
+
+# DB完全リセット + 起動 + マイグレーション
+fresh-db: reset up
+  just wait-db
+  just migrate
 
 # 全部リセットして再起動
 restart: down up
 
-# DBだけリセット
-reset-db:
-  {{compose}} rm -sf postgres
-  docker volume rm livejuke_postgres-data || true
+# API開発サーバー起動
+dev-api:
+  cd api && cargo run --quiet
 
-# DBリセット→再起動
-re-db: reset-db
-  {{compose}} up -d postgres
+# フロント開発サーバー起動
+dev-app:
+  cd app && npx expo start
+
+# 全部起動（DB + API）
+dev: up
   just wait-db
+  just migrate
+  just dev-api
