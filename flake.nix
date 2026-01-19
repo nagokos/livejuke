@@ -38,6 +38,7 @@
           git
           curl
           jq
+          just
         ];
 
         apiPkgs =
