@@ -43,6 +43,7 @@ migrate:
 migrate-add name:
   cd api && sqlx migrate add -r {{name}}
 
+# マイグレーションを１つ戻す
 migrate-rev:
 	cd api && sqlx migrate revert
 
@@ -67,3 +68,7 @@ dev: up
   just wait-db
   just migrate
   just dev-api
+
+# スキーマの作成
+gen-schema:
+    curl -s http://localhost:3000/api-docs/openapi.json | jq . > schema/openapi.json
