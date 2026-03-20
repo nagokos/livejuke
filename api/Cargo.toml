@@ -37,5 +37,8 @@ dotenvy = "0.15"
 thiserror = "2"
 anyhow = "1"
 
+# password
+argon2 = "0.5"
+
 # date
 chrono = { version = "0.4", features = ["serde"] }
