@@ -15,7 +15,7 @@ impl From<User> for CurrentUserResponse {
         Self {
             id: value.id.get(),
             display_name: value.display_name,
-            role: value.role.to_string(),
+            role: value.role.as_str().to_string(),
         }
     }
 }

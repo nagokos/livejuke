@@ -1,7 +1,7 @@
 use std::ops::Add;
 
 use chrono::Utc;
-use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
+use jsonwebtoken::{Algorithm, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -21,10 +21,10 @@ pub struct Claims {
 }
 
 impl Claims {
-    fn new(sub: i64, role: String, exp: i64) -> Self {
+    fn new(sub: i64, role: Role, exp: i64) -> Self {
         Self {
             sub,
-            role,
+            role: role.as_str().to_string(),
             iat: Utc::now().timestamp(),
             exp: Utc::now().timestamp().add(exp),
         }
@@ -48,8 +48,8 @@ impl JwtTokenProvider {
 impl TokenProvider for JwtTokenProvider {
     fn generate(&self, sub: Id<User>, role: Role) -> Result<String, anyhow::Error> {
         let header = Header::new(Algorithm::HS256);
-        let claims = Claims::new(sub.get(), role.to_string(), self.jwt_expiration);
-        Ok(encode(
+        let claims = Claims::new(sub.get(), role, self.jwt_expiration);
+        Ok(jsonwebtoken::encode(
             &header,
             &claims,
             &EncodingKey::from_secret(self.jwt_secret.as_bytes()),

@@ -6,11 +6,11 @@ use crate::{
     domain::{
         authentication::{
             error::AuthenticationError,
-            model::{Authentication, NewAuthentication},
+            model::{Authentication, NewAuthentication, Provider},
             repository::AuthRepository,
         },
         id::Id,
-        user::model::User,
+        user::model::{NewUser, User},
     },
     infrastructure::persistence::pg_user_repository::UserRow,
 };
@@ -39,7 +39,7 @@ impl PgAuthenticationRepository {
 impl AuthRepository for PgAuthenticationRepository {
     async fn create_user_with_authentication(
         &self,
-        new_user: crate::domain::user::model::NewUser,
+        new_user: NewUser,
         new_authentication: NewAuthentication,
     ) -> Result<User, anyhow::Error> {
         let mut tx = self.pool.begin().await?;
@@ -83,14 +83,14 @@ impl AuthRepository for PgAuthenticationRepository {
     }
     async fn find_by_provider_uid(
         &self,
-        provider: &str,
+        provider: Provider,
         uid: &str,
     ) -> Result<Option<Authentication>, anyhow::Error> {
         let sql = r#"
                 SELECT * FROM authentications WHERE provider = $1 AND uid = $2;
             "#;
         let authentication = sqlx::query_as::<_, AuthenticationRow>(sql)
-            .bind(provider)
+            .bind(provider.as_str())
             .bind(uid)
             .fetch_optional(&self.pool)
             .await?
