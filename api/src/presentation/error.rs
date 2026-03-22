@@ -10,8 +10,8 @@ impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
         match self {
             // AppError::User(e) => e.into_response(),
-            AppError::Authentication(e) => e.into_response(),
-            AppError::Unexpected(_) => (
+            Self::Authentication(e) => e.into_response(),
+            Self::Unexpected(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(
                     json!({ "code": ErrorCode::InternalError.as_str(),"error": "internal server error" }),

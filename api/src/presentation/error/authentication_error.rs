@@ -8,13 +8,9 @@ use crate::{
 impl IntoResponse for AuthenticationError {
     fn into_response(self) -> axum::response::Response {
         let (status, code): (StatusCode, ErrorCode) = match self {
-            AuthenticationError::EmailAlreadyExists => {
-                (StatusCode::CONFLICT, ErrorCode::EmailAlreadyExists)
-            }
-            AuthenticationError::Email(_) => (StatusCode::BAD_REQUEST, ErrorCode::InvalidEmail),
-            AuthenticationError::Password(_) => {
-                (StatusCode::BAD_REQUEST, ErrorCode::InvalidPassword)
-            }
+            Self::EmailAlreadyExists => (StatusCode::CONFLICT, ErrorCode::EmailAlreadyExists),
+            Self::Email(_) => (StatusCode::BAD_REQUEST, ErrorCode::InvalidEmail),
+            Self::Password(_) => (StatusCode::BAD_REQUEST, ErrorCode::InvalidPassword),
         };
         (
             status,
