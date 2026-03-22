@@ -93,17 +93,24 @@ where
         Ok((user, token))
     }
 }
+
 #[cfg(test)]
 mod tests {
     use chrono::Utc;
 
-    use crate::domain::{authentication::email::Email, id::Id, user::model::Role};
+    use crate::domain::{
+        authentication::{email::Email, model::Authentication, password::Password},
+        id::Id,
+        user::{display_name::DisplayName, model::Role},
+    };
 
     use super::*;
 
     struct MockAuthRepository {
         user: User,
+        authentication: Authentication,
         should_fail: bool,
+        is_none: bool,
     }
     impl AuthRepository for MockAuthRepository {
         async fn create_user_with_authentication(
@@ -112,28 +119,31 @@ mod tests {
             _new_authentication: NewAuthentication,
         ) -> Result<User, anyhow::Error> {
             if self.should_fail {
-                Err(AuthenticationError::EmailAlreadyExists.into())
-            } else {
-                Ok(self.user.clone())
+                return Err(AuthenticationError::EmailAlreadyExists.into());
             }
+            Ok(self.user.clone())
         }
         async fn find_by_provider_uid(
             &self,
             _provider: Provider,
             _uid: &str,
-        ) -> Result<Option<crate::domain::authentication::model::Authentication>, anyhow::Error>
-        {
-            unimplemented!()
+        ) -> Result<Option<Authentication>, anyhow::Error> {
+            if self.is_none {
+                return Ok(None);
+            }
+            Ok(Some(self.authentication.clone()))
         }
     }
 
-    struct MockPasswordHasher;
+    struct MockPasswordHasher {
+        verify_result: bool,
+    }
     impl PasswordHasher for MockPasswordHasher {
         fn hash(&self, _password: &str) -> Result<String, anyhow::Error> {
             Ok("hashed_password".to_string())
         }
         fn verify(&self, _password: &str, _password_hash: &str) -> Result<bool, anyhow::Error> {
-            unimplemented!()
+            Ok(self.verify_result)
         }
     }
 
@@ -148,10 +158,16 @@ mod tests {
         }
     }
 
-    struct MockUserRepository;
+    struct MockUserRepository {
+        user: User,
+        is_none: bool,
+    }
     impl UserRepository for MockUserRepository {
         async fn find_by_id(&self, _user_id: Id<User>) -> Result<Option<User>, anyhow::Error> {
-            unimplemented!()
+            if self.is_none {
+                return Ok(None);
+            }
+            Ok(Some(self.user.clone()))
         }
     }
 
@@ -165,24 +181,43 @@ mod tests {
         }
     }
 
+    fn test_authentication_provider_email() -> Authentication {
+        Authentication {
+            id: Id::new(1),
+            user_id: Id::new(1),
+            provider: Provider::Email,
+            uid: "test@example.com".to_string(),
+            password_digest: "".to_string(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        }
+    }
+
     #[tokio::test]
     async fn test_register_by_email_success() {
         let service = AuthService::new(
             MockAuthRepository {
                 should_fail: false,
                 user: test_user(),
+                authentication: test_authentication_provider_email(),
+                is_none: false,
             },
-            MockUserRepository,
-            MockPasswordHasher,
+            MockUserRepository {
+                user: test_user(),
+                is_none: false,
+            },
+            MockPasswordHasher {
+                verify_result: true,
+            },
             MockTokenProvider,
         );
 
         let new_user = NewUser {
-            display_name: "test".to_string(),
+            display_name: DisplayName::try_new("test".to_string()).unwrap(),
         };
         let credentials = EmailCredentials {
             email: Email::try_new("test@example.com".to_string()).unwrap(),
-            password: "password0123".to_string(),
+            password: Password::try_new("password0123".to_string()).unwrap(),
         };
 
         let result = service.register_by_email(new_user, credentials).await;
@@ -192,24 +227,32 @@ mod tests {
         assert_eq!(user.display_name.as_str(), "test");
         assert_eq!(token.as_str(), "mock_jwt_token");
     }
+
     #[tokio::test]
     async fn test_register_by_email_returns_email_already_exists() {
         let service = AuthService::new(
             MockAuthRepository {
                 should_fail: true,
                 user: test_user(),
+                authentication: test_authentication_provider_email(),
+                is_none: false,
             },
-            MockUserRepository,
-            MockPasswordHasher,
+            MockUserRepository {
+                user: test_user(),
+                is_none: false,
+            },
+            MockPasswordHasher {
+                verify_result: true,
+            },
             MockTokenProvider,
         );
 
         let new_user = NewUser {
-            display_name: "test".to_string(),
+            display_name: DisplayName::try_new("test".to_string()).unwrap(),
         };
         let credentials = EmailCredentials {
             email: Email::try_new("test@example.com".to_string()).unwrap(),
-            password: "password0123".to_string(),
+            password: Password::try_new("password0123".to_string()).unwrap(),
         };
 
         let result = service.register_by_email(new_user, credentials).await;
@@ -218,6 +261,137 @@ mod tests {
         assert!(matches!(
             result.unwrap_err(),
             AppError::Authentication(AuthenticationError::EmailAlreadyExists)
+        ))
+    }
+
+    #[tokio::test]
+    async fn test_login_by_email_success() {
+        let service = AuthService::new(
+            MockAuthRepository {
+                should_fail: false,
+                authentication: test_authentication_provider_email(),
+                user: test_user(),
+                is_none: false,
+            },
+            MockUserRepository {
+                user: test_user(),
+                is_none: false,
+            },
+            MockPasswordHasher {
+                verify_result: true,
+            },
+            MockTokenProvider,
+        );
+
+        let credentials = EmailCredentials {
+            email: Email::try_new("test@example.com".to_string()).unwrap(),
+            password: Password::try_new("password0123".to_string()).unwrap(),
+        };
+
+        let result = service.login_by_email(credentials).await;
+
+        assert!(result.is_ok());
+        let (user, token) = result.unwrap();
+        assert_eq!(user.display_name.as_str(), "test");
+        assert_eq!(token.as_str(), "mock_jwt_token");
+    }
+
+    #[tokio::test]
+    async fn test_login_by_email_password_mismatch() {
+        let service = AuthService::new(
+            MockAuthRepository {
+                should_fail: false,
+                authentication: test_authentication_provider_email(),
+                user: test_user(),
+                is_none: false,
+            },
+            MockUserRepository {
+                user: test_user(),
+                is_none: false,
+            },
+            MockPasswordHasher {
+                verify_result: false,
+            },
+            MockTokenProvider,
+        );
+
+        let credentials = EmailCredentials {
+            email: Email::try_new("test@example.com".to_string()).unwrap(),
+            password: Password::try_new("password0123".to_string()).unwrap(),
+        };
+
+        let result = service.login_by_email(credentials).await;
+
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            AppError::Authentication(AuthenticationError::AuthenticationFailed)
+        ))
+    }
+
+    #[tokio::test]
+    async fn test_login_by_email_return_user_not_found() {
+        let service = AuthService::new(
+            MockAuthRepository {
+                should_fail: false,
+                authentication: test_authentication_provider_email(),
+                user: test_user(),
+                is_none: false,
+            },
+            MockUserRepository {
+                user: test_user(),
+                is_none: true,
+            },
+            MockPasswordHasher {
+                verify_result: true,
+            },
+            MockTokenProvider,
+        );
+
+        let credentials = EmailCredentials {
+            email: Email::try_new("test@example.com".to_string()).unwrap(),
+            password: Password::try_new("password0123".to_string()).unwrap(),
+        };
+
+        let result = service.login_by_email(credentials).await;
+
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            AppError::Authentication(AuthenticationError::AuthenticationFailed)
+        ))
+    }
+
+    #[tokio::test]
+    async fn test_login_by_email_authentication_not_found() {
+        let service = AuthService::new(
+            MockAuthRepository {
+                should_fail: false,
+                authentication: test_authentication_provider_email(),
+                user: test_user(),
+                is_none: true,
+            },
+            MockUserRepository {
+                user: test_user(),
+                is_none: false,
+            },
+            MockPasswordHasher {
+                verify_result: true,
+            },
+            MockTokenProvider,
+        );
+
+        let credentials = EmailCredentials {
+            email: Email::try_new("test@example.com".to_string()).unwrap(),
+            password: Password::try_new("password0123".to_string()).unwrap(),
+        };
+
+        let result = service.login_by_email(credentials).await;
+
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            AppError::Authentication(AuthenticationError::AuthenticationFailed)
         ))
     }
 }
