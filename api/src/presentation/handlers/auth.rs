@@ -1,45 +1,17 @@
+use crate::presentation::request::auth::{LoginEmailInput, RegisterEmailInput};
 use crate::{
-    AppState,
-    application::error::AppError,
-    domain::{
-        authentication::{email::Email, model::EmailCredentials},
-        user::model::{NewUser, User},
-    },
+    AppState, application::error::AppError,
     presentation::response::user_response::CurrentUserResponse,
 };
 use axum::{Json, extract::State, http::StatusCode};
 use axum_extra::extract::{CookieJar, cookie::Cookie};
-use serde::Deserialize;
-use utoipa::ToSchema;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_axum::routes;
 
-#[derive(Deserialize, Clone, ToSchema)]
-pub struct AuthEmailInput {
-    display_name: String,
-    #[schema(value_type = String)]
-    email: Email,
-    password: String,
-}
-
-impl AuthEmailInput {
-    fn into_parts(self) -> (NewUser, EmailCredentials) {
-        (
-            NewUser {
-                display_name: self.display_name,
-            },
-            EmailCredentials {
-                email: self.email,
-                password: self.password,
-            },
-        )
-    }
-}
-
 #[utoipa::path(
     post,
-    path = "/email",
-    request_body = AuthEmailInput,
+    path = "/register/email",
+    request_body = RegisterEmailInput,
     responses(
         (status = 201, body = CurrentUserResponse),
         (status = 400, description = "invalid email or password"),
@@ -50,10 +22,10 @@ impl AuthEmailInput {
 async fn register_by_email(
     State(state): State<AppState>,
     jar: CookieJar,
-    Json(input): Json<AuthEmailInput>,
+    Json(input): Json<RegisterEmailInput>,
 ) -> Result<(StatusCode, CookieJar, Json<CurrentUserResponse>), AppError> {
     let (new_user, credentials) = input.into_parts();
-    let (user, token): (User, String) = state
+    let (user, token) = state
         .auth_service
         .register_by_email(new_user, credentials)
         .await?;
