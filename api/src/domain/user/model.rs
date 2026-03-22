@@ -19,11 +19,11 @@ pub enum Role {
     Admin,
 }
 
-impl std::fmt::Display for Role {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Role {
+    pub fn as_str(&self) -> &str {
         match self {
-            Self::User => write!(f, "user"),
-            Self::Admin => write!(f, "admin"),
+            Self::User => "user",
+            Self::Admin => "admin",
         }
     }
 }
