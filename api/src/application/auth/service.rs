@@ -48,7 +48,9 @@ where
         new_user: NewUser,
         credentials: EmailCredentials,
     ) -> Result<(User, String), AppError> {
-        let password_digest = self.password_hasher.hash(&credentials.password)?;
+        let password_digest = self
+            .password_hasher
+            .hash(&credentials.password.into_inner())?;
         let new_authentication = NewAuthentication::new(
             Provider::Email,
             credentials.email.into_inner(),

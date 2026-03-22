@@ -45,21 +45,21 @@ impl AuthRepository for PgAuthenticationRepository {
         let mut tx = self.pool.begin().await?;
 
         let sql = r#"
-                INSERT INTO users (display_name)
-                VALUES ($1)
-                RETURNING *
-            "#;
+            INSERT INTO users (display_name)
+            VALUES ($1)
+            RETURNING *
+        "#;
         let user: User = sqlx::query_as::<_, UserRow>(sql)
-            .bind(&new_user.display_name)
+            .bind(new_user.display_name.into_inner())
             .fetch_one(&mut *tx)
             .await?
             .try_into()?;
 
         let sql = r#"
-                INSERT INTO authentications (user_id, provider, uid, password_digest)
-                VALUES ($1, $2, $3, $4)
-                RETURNING *
-            "#;
+            INSERT INTO authentications (user_id, provider, uid, password_digest)
+            VALUES ($1, $2, $3, $4)
+            RETURNING *
+        "#;
         let result = sqlx::query(sql)
             .bind(user.id.get())
             .bind(new_authentication.provider.as_str())
