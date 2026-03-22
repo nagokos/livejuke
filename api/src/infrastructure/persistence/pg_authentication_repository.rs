@@ -1,3 +1,4 @@
+use anyhow::Ok;
 use chrono::{DateTime, Utc};
 use sqlx::{PgPool, prelude::FromRow};
 
@@ -79,6 +80,23 @@ impl AuthRepository for PgAuthenticationRepository {
         tx.commit().await?;
 
         Ok(user)
+    }
+    async fn find_by_provider_uid(
+        &self,
+        provider: &str,
+        uid: &str,
+    ) -> Result<Option<Authentication>, anyhow::Error> {
+        let sql = r#"
+                SELECT * FROM authentications WHERE provider = $1 AND uid = $2;
+            "#;
+        let authentication = sqlx::query_as::<_, AuthenticationRow>(sql)
+            .bind(provider)
+            .bind(uid)
+            .fetch_optional(&self.pool)
+            .await?
+            .map(Authentication::try_from)
+            .transpose()?;
+        Ok(authentication)
     }
 }
 
