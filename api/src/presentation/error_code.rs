@@ -4,6 +4,7 @@ pub enum ErrorCode {
     InvalidPassword,
     RateLimitExceeded,
     InternalError,
+    Unauthorized,
 }
 
 impl ErrorCode {
@@ -14,6 +15,7 @@ impl ErrorCode {
             Self::InvalidPassword => "INVALID_PASSWORD",
             Self::RateLimitExceeded => "RATE_LIMIT_EXCEEDED",
             Self::InternalError => "INTERNAL_ERROR",
+            Self::Unauthorized => "UNAUTHORIZED",
         }
     }
 }
