@@ -1,3 +1,5 @@
+use crate::domain::authentication::model::EmailCredentials;
+use crate::domain::user::model::NewUser;
 use crate::presentation::request::auth::{LoginEmailInput, RegisterEmailInput};
 use crate::{
     AppState, application::error::AppError,
@@ -24,7 +26,8 @@ async fn register_by_email(
     jar: CookieJar,
     Json(input): Json<RegisterEmailInput>,
 ) -> Result<(StatusCode, CookieJar, Json<CurrentUserResponse>), AppError> {
-    let (new_user, credentials) = input.into_parts();
+    let new_user = NewUser::try_new(input.display_name)?;
+    let credentials = EmailCredentials::try_new(input.email, input.password)?;
     let (user, token) = state
         .auth_service
         .register_by_email(new_user, credentials)
