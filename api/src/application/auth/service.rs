@@ -5,6 +5,7 @@ use crate::{
     },
     domain::{
         authentication::{
+            error::AuthenticationError,
             model::{EmailCredentials, NewAuthentication, Provider},
             repository::AuthRepository,
         },
@@ -68,6 +69,30 @@ where
         let token = self.token_provider.generate(user.id, user.role)?;
         Ok((user, token))
     }
+    pub async fn login_by_email(
+        &self,
+        credentials: EmailCredentials,
+    ) -> Result<(User, String), AppError> {
+        let authentication = self
+            .auth_repo
+            .find_by_provider_uid(Provider::Email, &credentials.email.into_inner())
+            .await?
+            .ok_or(AuthenticationError::AuthenticationFailed)?;
+        if !self.password_hasher.verify(
+            &credentials.password.into_inner(),
+            &authentication.password_digest,
+        )? {
+            return Err(AuthenticationError::AuthenticationFailed.into());
+        }
+        let user = self
+            .user_repo
+            .find_by_id(authentication.user_id)
+            .await?
+            .ok_or(AuthenticationError::AuthenticationFailed)?;
+        let token = self.token_provider.generate(user.id, user.role)?;
+        Ok((user, token))
+    }
+}
 #[cfg(test)]
 mod tests {
     use chrono::Utc;

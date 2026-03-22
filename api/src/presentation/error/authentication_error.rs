@@ -11,6 +11,7 @@ impl IntoResponse for AuthenticationError {
             Self::EmailAlreadyExists => (StatusCode::CONFLICT, ErrorCode::EmailAlreadyExists),
             Self::Email(_) => (StatusCode::BAD_REQUEST, ErrorCode::InvalidEmail),
             Self::Password(_) => (StatusCode::BAD_REQUEST, ErrorCode::InvalidPassword),
+            Self::AuthenticationFailed => (StatusCode::UNAUTHORIZED, ErrorCode::Unauthorized),
         };
         (
             status,

@@ -2,8 +2,8 @@ use crate::domain::{authentication::error::AuthenticationError, user::error::Use
 
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {
-    // #[error(transparent)]
-    // User(#[from] UserError),
+    #[error(transparent)]
+    User(#[from] UserError),
     #[error(transparent)]
     Authentication(#[from] AuthenticationError),
     #[error(transparent)]

@@ -25,7 +25,20 @@ impl PgUserRepository {
     }
 }
 
-impl UserRepository for PgUserRepository {}
+impl UserRepository for PgUserRepository {
+    async fn find_by_id(&self, user_id: Id<User>) -> Result<Option<User>, anyhow::Error> {
+        let sql = r#"
+            SELECT * FROM users WHERE id = $1;
+        "#;
+        let user = sqlx::query_as::<_, UserRow>(sql)
+            .bind(user_id.get())
+            .fetch_optional(&self.pool)
+            .await?
+            .map(User::try_from)
+            .transpose()?;
+        Ok(user)
+    }
+}
 
 impl TryFrom<UserRow> for User {
     type Error = anyhow::Error;

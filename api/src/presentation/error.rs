@@ -9,7 +9,7 @@ pub mod user_error;
 impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
         match self {
-            // AppError::User(e) => e.into_response(),
+            Self::User(e) => e.into_response(),
             Self::Authentication(e) => e.into_response(),
             Self::Unexpected(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,

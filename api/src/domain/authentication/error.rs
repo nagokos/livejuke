@@ -8,4 +8,6 @@ pub enum AuthenticationError {
     Password(#[from] PasswordError),
     #[error("email already exists")]
     EmailAlreadyExists,
+    #[error("authentication failed")]
+    AuthenticationFailed,
 }
