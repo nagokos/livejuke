@@ -1,0 +1,4 @@
+ignore = [
+	"src/domain/authentication/email.rs",
+	"src/domain/authentication/password.rs",
+]
