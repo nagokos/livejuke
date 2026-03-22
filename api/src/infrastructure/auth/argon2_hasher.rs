@@ -1,7 +1,7 @@
 use crate::application::traits::password_hasher::PasswordHasher as AppPasswordHasher;
 use anyhow::Ok;
 use argon2::{
-    Argon2, PasswordHasher,
+    Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
     password_hash::{SaltString, rand_core::OsRng},
 };
 
@@ -17,7 +17,10 @@ impl AppPasswordHasher for Argon2Hasher {
             .to_string();
         Ok(password_hash)
     }
-    fn verify(&self, password: &str) -> Result<bool, anyhow::Error> {
-        todo!()
+    fn verify(&self, password: &str, password_hash: &str) -> Result<bool, anyhow::Error> {
+        let parsed_hash = PasswordHash::new(password_hash).map_err(|e| anyhow::anyhow!(e))?;
+        Ok(Argon2::default()
+            .verify_password(password.as_bytes(), &parsed_hash)
+            .is_ok())
     }
 }
