@@ -38,6 +38,7 @@
           git
           curl
           jq
+          yq-go
           just
           sqlx-cli
         ];

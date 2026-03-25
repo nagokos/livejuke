@@ -71,4 +71,7 @@ dev: up
 
 # スキーマの作成
 gen-schema:
-    curl -s http://localhost:3000/api-docs/openapi.json | jq . > schema/openapi.json
+    curl -s http://localhost:3000/api-docs/openapi.json | yq -P > schema/openapi.yaml
+# appに型ファイル作成
+gen-schema-app:
+		npx openapi-typescript ./schema/openapi.yaml -o ./app/src/types/schema.d.ts 
