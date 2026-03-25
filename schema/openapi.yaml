@@ -1,0 +1,89 @@
+openapi: 3.1.0
+info:
+  title: api
+  description: ""
+  license:
+    name: ""
+  version: 0.1.0
+paths:
+  /auth/login/email:
+    post:
+      operationId: login_by_email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginEmailInput'
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUserResponse'
+        "401":
+          description: unauthorized error
+        "500":
+          description: internal server error
+  /auth/register/email:
+    post:
+      operationId: register_by_email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterEmailInput'
+        required: true
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUserResponse'
+        "400":
+          description: invalid email or password
+        "409":
+          description: email already exists
+        "500":
+          description: internal server error
+components:
+  schemas:
+    CurrentUserResponse:
+      type: object
+      required:
+        - id
+        - display_name
+        - role
+      properties:
+        display_name:
+          type: string
+        id:
+          type: integer
+          format: int64
+        role:
+          type: string
+    LoginEmailInput:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    RegisterEmailInput:
+      type: object
+      required:
+        - display_name
+        - email
+        - password
+      properties:
+        display_name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
