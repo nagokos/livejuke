@@ -5,6 +5,7 @@ use std::{
 };
 
 use anyhow::Ok;
+use axum::{Json, http::StatusCode, response::IntoResponse};
 use sqlx::postgres::PgPoolOptions;
 use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder};
 use utoipa::OpenApi;
@@ -12,16 +13,26 @@ use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::{
-    application::auth::service::AuthService,
+    application::auth::{
+        config::AuthConfig,
+        service::{AuthProviders, AuthRepositories, AuthService},
+    },
     config::Config,
     infrastructure::{
-        auth::{argon2_hasher::Argon2Hasher, jwt_token_provider::JwtTokenProvider},
+        auth::{
+            argon2_hasher::Argon2Hasher, jwt_access_token_provider::JwtAccessTokenProvider,
+            opaque_refresh_token_provider::OpaqueRefreshTokenProvider,
+        },
+        external::google_token_verifier::GoogleTokenVerifier,
         persistence::{
             pg_authentication_repository::PgAuthenticationRepository,
-            pg_user_repository::PgUserRepository,
+            pg_session_repository::PgSessionRepository, pg_user_repository::PgUserRepository,
         },
     },
-    presentation::{cookie::CookieConfig, handlers::auth::create_auth_router},
+    presentation::{
+        error::ErrorResponse, error_code::ErrorCode, handlers::auth::create_auth_router,
+        middleware::auth::auth_middleware,
+    },
 };
 
 pub mod config;
@@ -35,13 +46,20 @@ pub mod presentation;
 #[openapi()]
 struct ApiDoc;
 
-type ConcreteAuthService =
-    AuthService<PgAuthenticationRepository, PgUserRepository, Argon2Hasher, JwtTokenProvider>;
+type ConcreteAuthService = AuthService<
+    PgAuthenticationRepository,
+    PgUserRepository,
+    PgSessionRepository,
+    Argon2Hasher,
+    JwtAccessTokenProvider,
+    OpaqueRefreshTokenProvider,
+    GoogleTokenVerifier,
+>;
 
 #[derive(Clone)]
 pub struct AppState {
     auth_service: Arc<ConcreteAuthService>,
-    cookie_config: Arc<CookieConfig>,
+    access_token_provider: JwtAccessTokenProvider,
 }
 
 #[tokio::main]
@@ -69,34 +87,61 @@ async fn main() -> anyhow::Result<()> {
     });
 
     let config = Config::from_env()?;
+
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&config.database_url)
         .await?;
 
-    let cookie_config = Arc::new(CookieConfig::from_env(config.app_env));
+    let access_token_provider =
+        JwtAccessTokenProvider::new(config.access_token_secret, config.access_token_expiration);
+    let auth_service = {
+        let auth_repositories = AuthRepositories {
+            auth_repo: PgAuthenticationRepository::new(pool.clone()),
+            user_repo: PgUserRepository::new(pool.clone()),
+            session_repo: PgSessionRepository::new(pool.clone()),
+        };
+        let auth_providers = AuthProviders {
+            password_hasher: Argon2Hasher,
+            access_token_provider: access_token_provider.clone(),
+            refresh_token_provider: OpaqueRefreshTokenProvider,
+            id_token_verifier: GoogleTokenVerifier::new(
+                config.google_client_id,
+                reqwest::Client::new(),
+            )
+            .await?,
+        };
+        let auth_config = AuthConfig::new(config.refresh_token_expiration);
 
-    let user_repo = PgUserRepository::new(pool.clone());
-    let auth_repo = PgAuthenticationRepository::new(pool.clone());
-    let token_provider = JwtTokenProvider::new(config.jwt_secret, config.jwt_expiration);
-    let auth_service = Arc::new(AuthService::new(
-        auth_repo,
-        user_repo,
-        Argon2Hasher,
-        token_provider,
-    ));
+        Arc::new(AuthService::new(
+            auth_repositories,
+            auth_providers,
+            auth_config,
+        ))
+    };
 
     let app_state = AppState {
         auth_service,
-        cookie_config,
+        access_token_provider,
     };
 
-    let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
+    let (public_router, public_api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .nest("/auth", create_auth_router())
         .split_for_parts();
-    let router = router
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", api))
-        .layer(GovernorLayer::new(governor_conf))
+
+    let router = public_router
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", public_api))
+        .layer(GovernorLayer::new(governor_conf).error_handler(|_| {
+            let error_response = ErrorResponse {
+                code: ErrorCode::RateLimitExceeded,
+                message: "too many requests".to_string(),
+            };
+            (StatusCode::TOO_MANY_REQUESTS, Json(error_response)).into_response()
+        }))
+        // .layer(axum::middleware::from_fn_with_state(
+        //     app_state.clone(),
+        //     auth_middleware,
+        // ))
         .with_state(app_state);
 
     let address = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 3000));

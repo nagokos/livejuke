@@ -7,9 +7,12 @@ edition = "2024"
 # web
 tokio = { version = "1.50", features = ["full"] }
 axum = "0.8"
-axum-extra = { version = "0.12", features = ["cookie"] }
+axum-extra = { version = "0.12", features = ["cookie", "typed-header"] }
 tower-http = { version = "0.6", features = ["trace"] }
 tower_governor = "0.8"
+
+# http
+reqwest = { version = "0.13", features = ["json"] }
 
 # log
 tracing = "0.1"
@@ -39,6 +42,18 @@ anyhow = "1"
 
 # password
 argon2 = "0.5"
+
+# randow
+rand = { version = "0.10", features = ["thread_rng"] }
+
+# encode
+base64 = "0.22"
+
+# hex
+hex = "0.4"
+
+# hash
+sha2 = "0.11"
 
 # validator
 nutype = { version = "0.6", features = ["serde", "derive_unsafe"] }

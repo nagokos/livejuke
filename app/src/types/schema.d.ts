@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auth_google"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login/email": {
         parameters: {
             query?: never;
@@ -40,20 +56,42 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        CurrentUserResponse: {
-            display_name: string;
-            /** Format: int64 */
-            id: number;
-            role: string;
+        AuthGoogleInput: {
+            device_info: components["schemas"]["DeviceInfoInput"];
+            id_token: string;
+        };
+        AuthResponse: {
+            access_token: string;
+            refresh_token: string;
+            user: components["schemas"]["UserResponse"];
+        };
+        DeviceInfoInput: {
+            device_name?: string | null;
+            model_name?: string | null;
+            os: string;
+        };
+        /** @enum {string} */
+        ErrorCode: "EMAIL_ALREADY_EXISTS" | "INVALID_EMAIL" | "INVALID_PASSWORD" | "INVALID_DISPLAY_NAME" | "RATE_LIMIT_EXCEEDED" | "SESSION_CREATION_FAILED" | "INTERNAL_ERROR" | "UNAUTHORIZED";
+        ErrorResponse: {
+            code: components["schemas"]["ErrorCode"];
+            message: string;
         };
         LoginEmailInput: {
+            device_info: components["schemas"]["DeviceInfoInput"];
             email: string;
             password: string;
         };
         RegisterEmailInput: {
+            device_info: components["schemas"]["DeviceInfoInput"];
             display_name: string;
             email: string;
             password: string;
+        };
+        UserResponse: {
+            display_name: string;
+            /** Format: int64 */
+            id: number;
+            role: string;
         };
     };
     responses: never;
@@ -64,6 +102,47 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    auth_google: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuthGoogleInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthResponse"];
+                };
+            };
+            /** @description unauthorized error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     login_by_email: {
         parameters: {
             query?: never;
@@ -82,7 +161,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CurrentUserResponse"];
+                    "application/json": components["schemas"]["AuthResponse"];
                 };
             };
             /** @description unauthorized error */
@@ -90,14 +169,18 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description internal server error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
@@ -119,7 +202,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CurrentUserResponse"];
+                    "application/json": components["schemas"]["AuthResponse"];
                 };
             };
             /** @description invalid email or password */
@@ -127,21 +210,27 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description email already exists */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description internal server error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };

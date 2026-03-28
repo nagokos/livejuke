@@ -14,7 +14,7 @@ pub struct Authentication {
     pub user_id: Id<User>,
     pub provider: Provider,
     pub uid: String,
-    pub password_digest: String,
+    pub password_digest: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }

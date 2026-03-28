@@ -3,8 +3,10 @@ use std::{env, str::FromStr};
 pub struct Config {
     pub app_env: AppEnv,
     pub database_url: String,
-    pub jwt_secret: String,
-    pub jwt_expiration: i64,
+    pub access_token_secret: String,
+    pub access_token_expiration: i64,
+    pub refresh_token_expiration: i64,
+    pub google_client_id: String,
 }
 
 impl Config {
@@ -14,8 +16,10 @@ impl Config {
         Ok(Config {
             app_env: env::var("APP_ENV")?.parse()?,
             database_url: env::var("DATABASE_URL")?,
-            jwt_secret: env::var("JWT_SECRET")?,
-            jwt_expiration: env::var("JWT_EXPIRATION")?.parse()?,
+            access_token_secret: env::var("ACCESS_TOKEN_SECRET")?,
+            access_token_expiration: env::var("ACCESS_TOKEN_EXPIRATION")?.parse()?,
+            refresh_token_expiration: env::var("REFRESH_TOKEN_EXPIRATION")?.parse()?,
+            google_client_id: env::var("GOOGLE_CLIENT_ID")?.parse()?,
         })
     }
 }

@@ -9,6 +9,7 @@ pub enum ErrorCode {
     InvalidPassword,
     InvalidDisplayName,
     RateLimitExceeded,
+    SessionCreationFailed,
     InternalError,
     Unauthorized,
 }

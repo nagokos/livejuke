@@ -1,9 +1,15 @@
 import { Image, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { Link } from "expo-router";
+import { Link, Redirect } from "expo-router";
+import { useAuthStore } from "@/stores/auth";
 
-export default function Welcome() {
+export default function Mypage() {
+	const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+	if (!isLoggedIn()) {
+		return <Redirect href="/welcome" />;
+	}
+
 	return (
 		<View className="flex-1 bg-white">
 			<View className="flex-1 items-center justify-center">

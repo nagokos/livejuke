@@ -4,8 +4,8 @@ CREATE TABLE authentications(
 	provider VARCHAR NOT NULL CHECK (provider IN ('email', 'google')), 
 	uid VARCHAR NOT NULL,
 	password_digest VARCHAR,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 	UNIQUE(provider, uid)
 );
 CREATE TRIGGER set_updated_at

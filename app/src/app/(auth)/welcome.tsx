@@ -1,9 +1,73 @@
-import { Image, View } from "react-native";
+import { Image, Platform, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
+import {
+	GoogleSignin,
+	isErrorWithCode,
+	isSuccessResponse,
+	statusCodes,
+} from "@react-native-google-signin/google-signin";
+
+import * as Device from "expo-device";
+import { client } from "@/api/client";
+import { saveAccessToken, saveRefreshToken } from "@/lib/auth-storage";
+import { useAuthStore } from "@/stores/auth";
+import { useState } from "react";
 
 export default function Welcome() {
+	const [googleError, setGoogleError] = useState(false);
+
+	const googleLogin = async () => {
+		setGoogleError(false);
+		try {
+			const response = await GoogleSignin.signIn();
+			if (!isSuccessResponse(response)) return;
+
+			const idToken = response.data.idToken;
+			if (!idToken) {
+				setGoogleError(true);
+				return;
+			}
+
+			const { data, error } = await client.POST("/auth/google", {
+				body: {
+					id_token: idToken,
+					device_info: {
+						device_name: Device.deviceName ?? null,
+						model_name: Device.modelName ?? null,
+						os: `${Platform.OS} ${Device.osVersion ?? ""}`.trim(),
+					},
+				},
+			});
+
+			if (error) {
+				if (error.code === "SESSION_CREATION_FAILED") {
+					router.replace({
+						pathname: "/login",
+						params: { message: "登録が完了しました。ログインしてください" },
+					});
+				} else {
+					setGoogleError(true);
+				}
+				return;
+			}
+
+			await saveAccessToken(data.access_token);
+			await saveRefreshToken(data.refresh_token);
+			useAuthStore.getState().setCurrentUser(data.user);
+			router.replace("/");
+		} catch (error) {
+			if (
+				isErrorWithCode(error) &&
+				error.code === statusCodes.SIGN_IN_CANCELLED
+			) {
+				return;
+			}
+			setGoogleError(true);
+		}
+	};
+
 	return (
 		<View className="flex-1 bg-white">
 			<View className="flex-1 items-center justify-center">
@@ -18,11 +82,22 @@ export default function Welcome() {
 			</View>
 
 			<View className="px-7 pb-12 gap-3">
-				<Button size={"lg"} className="h-12 rounded-xl bg-[#534AB7]">
+				<Button
+					onPress={googleLogin}
+					size={"lg"}
+					className="h-12 rounded-xl bg-[#534AB7]"
+				>
 					<Text className="text-white text-base font-semibold">
 						Googleで続ける
 					</Text>
 				</Button>
+				{googleError && (
+					<View className="flex-row justify-center items-center gap-2">
+						<Text className="text-sm text-red-500">
+							エラーが発生しました。再度お試しください
+						</Text>
+					</View>
+				)}
 
 				<Link href="/register" asChild>
 					<Button

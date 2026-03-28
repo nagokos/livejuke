@@ -15,17 +15,6 @@ use crate::{
     infrastructure::persistence::pg_user_repository::UserRow,
 };
 
-#[derive(Debug, FromRow)]
-pub struct AuthenticationRow {
-    id: i64,
-    user_id: i64,
-    provider: String,
-    uid: String,
-    password_digest: String,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
-}
-
 pub struct PgAuthenticationRepository {
     pool: PgPool,
 }
@@ -45,12 +34,13 @@ impl AuthRepository for PgAuthenticationRepository {
         let mut tx = self.pool.begin().await?;
 
         let sql = r#"
-            INSERT INTO users (display_name)
-            VALUES ($1)
+            INSERT INTO users (display_name, email)
+            VALUES ($1, $2)
             RETURNING *
         "#;
         let user: User = sqlx::query_as::<_, UserRow>(sql)
             .bind(new_user.display_name.into_inner())
+            .bind(new_user.email)
             .fetch_one(&mut *tx)
             .await?
             .try_into()?;
@@ -58,7 +48,6 @@ impl AuthRepository for PgAuthenticationRepository {
         let sql = r#"
             INSERT INTO authentications (user_id, provider, uid, password_digest)
             VALUES ($1, $2, $3, $4)
-            RETURNING *
         "#;
         let result = sqlx::query(sql)
             .bind(user.id.get())
@@ -89,15 +78,25 @@ impl AuthRepository for PgAuthenticationRepository {
         let sql = r#"
                 SELECT * FROM authentications WHERE provider = $1 AND uid = $2;
             "#;
-        let authentication = sqlx::query_as::<_, AuthenticationRow>(sql)
+        sqlx::query_as::<_, AuthenticationRow>(sql)
             .bind(provider.as_str())
             .bind(uid)
             .fetch_optional(&self.pool)
             .await?
             .map(Authentication::try_from)
-            .transpose()?;
-        Ok(authentication)
+            .transpose()
     }
+}
+
+#[derive(Debug, FromRow)]
+pub struct AuthenticationRow {
+    id: i64,
+    user_id: i64,
+    provider: String,
+    uid: String,
+    password_digest: Option<String>,
+    created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>,
 }
 
 impl TryFrom<AuthenticationRow> for Authentication {

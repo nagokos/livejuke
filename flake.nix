@@ -1,12 +1,10 @@
 {
   description = "LiveJuke monorepo dev shells (Rust API + Expo RN)";
-
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     rust-overlay.url = "github:oxalica/rust-overlay";
   };
-
   outputs =
     {
       nixpkgs,
@@ -21,7 +19,6 @@
           inherit system;
           overlays = [ rust-overlay.overlays.default ];
         };
-
         rustToolchain = with pkgs.rust-bin; [
           (stable.latest.minimal.override {
             extensions = [
@@ -29,31 +26,39 @@
               "rust-src"
             ];
           })
-
           nightly.latest.rustfmt
           nightly.latest.rust-analyzer
         ];
-
         common = with pkgs; [
           git
           curl
           jq
           yq-go
           just
-          sqlx-cli
         ];
-
         apiPkgs =
           (with pkgs; [
             pkg-config
             postgresql
+            sqlx-cli
           ])
           ++ rustToolchain;
-
+        appPkgs = with pkgs; [
+          cocoapods
+        ];
       in
       {
         devShells.default = pkgs.mkShell {
           packages = common ++ apiPkgs;
+        };
+        devShells.app = pkgs.mkShell {
+          packages = common ++ appPkgs;
+          shellHook = ''
+            export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+               unset CC CXX CPP LD AR NM RANLIB STRIP
+               unset NIX_CC NIX_CFLAGS_COMPILE NIX_LDFLAGS
+               unset SDKROOT
+          '';
         };
       }
     );

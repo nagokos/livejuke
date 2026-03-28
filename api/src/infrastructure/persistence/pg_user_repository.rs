@@ -6,15 +6,6 @@ use crate::domain::{
     user::{model::User, repository::UserRepository},
 };
 
-#[derive(Debug, FromRow)]
-pub struct UserRow {
-    id: i64,
-    display_name: String,
-    role: String,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
-}
-
 pub struct PgUserRepository {
     pool: PgPool,
 }
@@ -30,14 +21,23 @@ impl UserRepository for PgUserRepository {
         let sql = r#"
             SELECT * FROM users WHERE id = $1;
         "#;
-        let user = sqlx::query_as::<_, UserRow>(sql)
+        sqlx::query_as::<_, UserRow>(sql)
             .bind(user_id.get())
             .fetch_optional(&self.pool)
             .await?
             .map(User::try_from)
-            .transpose()?;
-        Ok(user)
+            .transpose()
     }
+}
+
+#[derive(Debug, FromRow)]
+pub struct UserRow {
+    id: i64,
+    display_name: String,
+    email: String,
+    role: String,
+    created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>,
 }
 
 impl TryFrom<UserRow> for User {
@@ -47,6 +47,7 @@ impl TryFrom<UserRow> for User {
         Ok(Self {
             id: Id::new(value.id),
             display_name: value.display_name,
+            email: value.email,
             role: value.role.parse()?,
             created_at: value.created_at,
             updated_at: value.updated_at,

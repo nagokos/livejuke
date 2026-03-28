@@ -11,6 +11,7 @@ use crate::domain::{
 pub struct User {
     pub id: Id<User>,
     pub display_name: String,
+    pub email: String,
     pub role: Role,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -46,12 +47,14 @@ impl FromStr for Role {
 #[derive(Debug)]
 pub struct NewUser {
     pub display_name: DisplayName,
+    pub email: String,
 }
 
 impl NewUser {
-    pub fn try_new(display_name: String) -> Result<Self, UserError> {
+    pub fn try_new(display_name: String, email: String) -> Result<Self, UserError> {
         Ok(Self {
             display_name: DisplayName::try_new(display_name)?,
+            email,
         })
     }
 }

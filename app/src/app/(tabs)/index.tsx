@@ -46,11 +46,8 @@ export default function Home() {
 	return (
 		<View className="flex-1 bg-white">
 			<ScrollView showsVerticalScrollIndicator={false}>
-				<View className="pt-8 pb-4 px-5 flex-row justify-between items-center">
+				<View className="pt-8 pb-7 px-5 flex-row justify-between items-center">
 					<Text className="text-3xl font-bold text-gray-900">ホーム</Text>
-					<Pressable className="w-9 h-9 rounded-full bg-gray-100 items-center justify-center">
-						<Text className="text-gray-500 text-sm">🔍</Text>
-					</Pressable>
 				</View>
 				{/* 盛り上がってるショー */}
 				<View className="mb-6">

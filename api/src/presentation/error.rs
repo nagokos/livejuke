@@ -9,12 +9,13 @@ use utoipa::ToSchema;
 use crate::{application::error::AppError, presentation::error_code::ErrorCode};
 
 pub mod authentication_error;
+pub mod session_error;
 pub mod user_error;
 
 #[derive(Serialize, ToSchema)]
 pub struct ErrorResponse {
-    code: ErrorCode,
-    message: String,
+    pub code: ErrorCode,
+    pub message: String,
 }
 
 impl IntoResponse for AppError {
@@ -22,6 +23,7 @@ impl IntoResponse for AppError {
         match self {
             Self::User(e) => e.into_response(),
             Self::Authentication(e) => e.into_response(),
+            Self::Session(e) => e.into_response(),
             Self::Unexpected(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {

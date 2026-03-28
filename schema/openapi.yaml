@@ -6,6 +6,34 @@ info:
     name: ""
   version: 0.1.0
 paths:
+  /auth/google:
+    post:
+      operationId: auth_google
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthGoogleInput'
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "401":
+          description: unauthorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /auth/login/email:
     post:
       operationId: login_by_email
@@ -21,7 +49,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CurrentUserResponse'
+                $ref: '#/components/schemas/AuthResponse'
         "401":
           description: unauthorized error
           content:
@@ -49,7 +77,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CurrentUserResponse'
+                $ref: '#/components/schemas/AuthResponse'
         "400":
           description: invalid email or password
           content:
@@ -70,19 +98,43 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    CurrentUserResponse:
+    AuthGoogleInput:
       type: object
       required:
-        - id
-        - display_name
-        - role
+        - id_token
+        - device_info
       properties:
-        display_name:
+        device_info:
+          $ref: '#/components/schemas/DeviceInfoInput'
+        id_token:
           type: string
-        id:
-          type: integer
-          format: int64
-        role:
+    AuthResponse:
+      type: object
+      required:
+        - user
+        - access_token
+        - refresh_token
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserResponse'
+    DeviceInfoInput:
+      type: object
+      required:
+        - os
+      properties:
+        device_name:
+          type:
+            - string
+            - "null"
+        model_name:
+          type:
+            - string
+            - "null"
+        os:
           type: string
     ErrorCode:
       type: string
@@ -92,6 +144,7 @@ components:
         - INVALID_PASSWORD
         - INVALID_DISPLAY_NAME
         - RATE_LIMIT_EXCEEDED
+        - SESSION_CREATION_FAILED
         - INTERNAL_ERROR
         - UNAUTHORIZED
     ErrorResponse:
@@ -109,7 +162,10 @@ components:
       required:
         - email
         - password
+        - device_info
       properties:
+        device_info:
+          $ref: '#/components/schemas/DeviceInfoInput'
         email:
           type: string
         password:
@@ -120,10 +176,27 @@ components:
         - display_name
         - email
         - password
+        - device_info
       properties:
+        device_info:
+          $ref: '#/components/schemas/DeviceInfoInput'
         display_name:
           type: string
         email:
           type: string
         password:
+          type: string
+    UserResponse:
+      type: object
+      required:
+        - id
+        - display_name
+        - role
+      properties:
+        display_name:
+          type: string
+        id:
+          type: integer
+          format: int64
+        role:
           type: string
