@@ -1,5 +1,6 @@
 use crate::domain::authentication::model::EmailCredentials;
 use crate::domain::user::model::NewUser;
+use crate::presentation::error::ErrorResponse;
 use crate::presentation::request::auth::{LoginEmailInput, RegisterEmailInput};
 use crate::{
     AppState, application::error::AppError,
@@ -16,9 +17,9 @@ use utoipa_axum::routes;
     request_body = RegisterEmailInput,
     responses(
         (status = 201, body = CurrentUserResponse),
-        (status = 400, description = "invalid email or password"),
-        (status = 409, description = "email already exists"),
-        (status = 500, description = "internal server error"),
+        (status = 400, body = ErrorResponse, description = "invalid email or password"),
+        (status = 409, body = ErrorResponse, description = "email already exists"),
+        (status = 500, body = ErrorResponse,description = "internal server error"),
     )
 )]
 async fn register_by_email(
@@ -47,8 +48,8 @@ async fn register_by_email(
     request_body = LoginEmailInput,
     responses(
         (status = 200, body = CurrentUserResponse),
-        (status = 401, description = "unauthorized error"),
-        (status = 500, description = "internal server error"),
+        (status = 401, body = ErrorResponse, description = "unauthorized error"),
+        (status = 500, body = ErrorResponse, description = "internal server error"),
     )
 )]
 async fn login_by_email(

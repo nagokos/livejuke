@@ -1,22 +1,42 @@
 use axum::{Json, http::StatusCode, response::IntoResponse};
-use serde_json::json;
 
 use crate::{
-    domain::authentication::error::AuthenticationError, presentation::error_code::ErrorCode,
+    domain::authentication::error::AuthenticationError,
+    presentation::{error::ErrorResponse, error_code::ErrorCode},
 };
 
 impl IntoResponse for AuthenticationError {
     fn into_response(self) -> axum::response::Response {
-        let (status, code): (StatusCode, ErrorCode) = match self {
-            Self::EmailAlreadyExists => (StatusCode::CONFLICT, ErrorCode::EmailAlreadyExists),
-            Self::Email(_) => (StatusCode::BAD_REQUEST, ErrorCode::InvalidEmail),
-            Self::Password(_) => (StatusCode::BAD_REQUEST, ErrorCode::InvalidPassword),
-            Self::AuthenticationFailed => (StatusCode::UNAUTHORIZED, ErrorCode::Unauthorized),
+        let (code, error) = match self {
+            Self::EmailAlreadyExists => (
+                StatusCode::CONFLICT,
+                ErrorResponse {
+                    code: ErrorCode::EmailAlreadyExists,
+                    message: self.to_string(),
+                },
+            ),
+            Self::Email(_) => (
+                StatusCode::BAD_REQUEST,
+                ErrorResponse {
+                    code: ErrorCode::InvalidEmail,
+                    message: self.to_string(),
+                },
+            ),
+            Self::Password(_) => (
+                StatusCode::BAD_REQUEST,
+                ErrorResponse {
+                    code: ErrorCode::InvalidPassword,
+                    message: self.to_string(),
+                },
+            ),
+            Self::AuthenticationFailed => (
+                StatusCode::UNAUTHORIZED,
+                ErrorResponse {
+                    code: ErrorCode::Unauthorized,
+                    message: self.to_string(),
+                },
+            ),
         };
-        (
-            status,
-            Json(json!({ "code": code.as_str(),"error": self.to_string() })),
-        )
-            .into_response()
+        (code, Json(error)).into_response()
     }
 }
