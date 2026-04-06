@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::{PgPool, prelude::FromRow};
@@ -20,6 +21,7 @@ impl PgSessionRepository {
     }
 }
 
+#[async_trait]
 impl SessionRepository for PgSessionRepository {
     async fn create(&self, new_session: NewSession) -> Result<Session, anyhow::Error> {
         let sql = r#"

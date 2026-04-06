@@ -13,25 +13,30 @@ use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::{
-    application::auth::{
-        config::AuthConfig,
-        service::{AuthProviders, AuthRepositories, AuthService},
+    application::{
+        auth::{
+            config::AuthConfig,
+            service::{AuthProviders, AuthRepositories, AuthService},
+        },
+        traits::access_token_provider::AccessTokenProvider,
     },
     config::Config,
     infrastructure::{
         auth::{
-            argon2_hasher::Argon2Hasher, jwt_access_token_provider::JwtAccessTokenProvider,
+            jwt_access_token_provider::JwtAccessTokenProvider,
             opaque_refresh_token_provider::OpaqueRefreshTokenProvider,
         },
-        external::google_token_verifier::GoogleTokenVerifier,
+        external::{
+            google_token_verifier::GoogleTokenVerifier, smtp_email_sender::SmtpEmailSender,
+        },
         persistence::{
             pg_authentication_repository::PgAuthenticationRepository,
             pg_session_repository::PgSessionRepository, pg_user_repository::PgUserRepository,
+            redis_verification_code_store::RedisVerificationCodeStore,
         },
     },
     presentation::{
         error::ErrorResponse, error_code::ErrorCode, handlers::auth::create_auth_router,
-        middleware::auth::auth_middleware,
     },
 };
 
@@ -46,20 +51,11 @@ pub mod presentation;
 #[openapi()]
 struct ApiDoc;
 
-type ConcreteAuthService = AuthService<
-    PgAuthenticationRepository,
-    PgUserRepository,
-    PgSessionRepository,
-    Argon2Hasher,
-    JwtAccessTokenProvider,
-    OpaqueRefreshTokenProvider,
-    GoogleTokenVerifier,
->;
-
 #[derive(Clone)]
 pub struct AppState {
-    auth_service: Arc<ConcreteAuthService>,
-    access_token_provider: JwtAccessTokenProvider,
+    auth_service: Arc<AuthService>,
+    access_token_provider: Arc<dyn AccessTokenProvider>,
+    resend_cooldown_seconds: u8,
 }
 
 #[tokio::main]
@@ -93,23 +89,35 @@ async fn main() -> anyhow::Result<()> {
         .connect(&config.database_url)
         .await?;
 
-    let access_token_provider =
-        JwtAccessTokenProvider::new(config.access_token_secret, config.access_token_expiration);
+    let redis_conn = {
+        let redis_client = redis::Client::open(config.redis_url)?;
+        redis_client.get_multiplexed_async_connection().await?
+    };
+
+    let access_token_provider = Arc::new(JwtAccessTokenProvider::new(
+        config.access_token_secret,
+        config.access_token_expiration,
+    ));
     let auth_service = {
         let auth_repositories = AuthRepositories {
-            auth_repo: PgAuthenticationRepository::new(pool.clone()),
-            user_repo: PgUserRepository::new(pool.clone()),
-            session_repo: PgSessionRepository::new(pool.clone()),
+            auth_repo: Arc::new(PgAuthenticationRepository::new(pool.clone())),
+            user_repo: Arc::new(PgUserRepository::new(pool.clone())),
+            session_repo: Arc::new(PgSessionRepository::new(pool.clone())),
         };
         let auth_providers = AuthProviders {
-            password_hasher: Argon2Hasher,
             access_token_provider: access_token_provider.clone(),
-            refresh_token_provider: OpaqueRefreshTokenProvider,
-            id_token_verifier: GoogleTokenVerifier::new(
-                config.google_client_id,
-                reqwest::Client::new(),
-            )
-            .await?,
+            refresh_token_provider: Arc::new(OpaqueRefreshTokenProvider),
+            id_token_verifier: Arc::new(
+                GoogleTokenVerifier::new(config.google_client_id, reqwest::Client::new()).await?,
+            ),
+            verification_code_store: Arc::new(RedisVerificationCodeStore::new(redis_conn.clone())),
+            email_sender: Arc::new(SmtpEmailSender::try_new(
+                &config.smtp_host,
+                config.smtp_port,
+                &config.smtp_username,
+                &config.smtp_password,
+                &config.smtp_from,
+            )?),
         };
         let auth_config = AuthConfig::new(config.refresh_token_expiration);
 
@@ -123,6 +131,7 @@ async fn main() -> anyhow::Result<()> {
     let app_state = AppState {
         auth_service,
         access_token_provider,
+        resend_cooldown_seconds: config.resend_cooldown_seconds,
     };
 
     let (public_router, public_api) = OpenApiRouter::with_openapi(ApiDoc::openapi())

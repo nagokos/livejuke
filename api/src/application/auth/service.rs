@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use chrono::{Duration, Utc};
 
 use crate::{
@@ -6,16 +8,18 @@ use crate::{
         error::AppError,
         traits::{
             access_token_provider::AccessTokenProvider,
+            email_sender::EmailSender,
             id_token_verifier::IdTokenVerifier,
-            password_hasher::PasswordHasher,
             refresh_token_provider::RefreshTokenProvider,
-            types::{AccessToken, RefreshToken},
+            types::{AccessToken, RefreshToken, VerificationData},
+            verification_code_store::VerificationCodeStore,
         },
     },
     domain::{
         authentication::{
+            email::Email,
             error::AuthenticationError,
-            model::{EmailCredentials, NewAuthentication, Provider},
+            model::{NewAuthentication, Provider},
             repository::AuthRepository,
         },
         session::{
@@ -30,115 +34,119 @@ use crate::{
     },
 };
 
-pub struct AuthProviders<P, T, R, I> {
-    pub password_hasher: P,
-    pub access_token_provider: T,
-    pub refresh_token_provider: R,
-    pub id_token_verifier: I,
+pub struct AuthRepositories {
+    pub auth_repo: Arc<dyn AuthRepository>,
+    pub user_repo: Arc<dyn UserRepository>,
+    pub session_repo: Arc<dyn SessionRepository>,
 }
 
-pub struct AuthRepositories<A, U, S> {
-    pub auth_repo: A,
-    pub user_repo: U,
-    pub session_repo: S,
+pub struct AuthProviders {
+    pub access_token_provider: Arc<dyn AccessTokenProvider>,
+    pub refresh_token_provider: Arc<dyn RefreshTokenProvider>,
+    pub id_token_verifier: Arc<dyn IdTokenVerifier>,
+    pub verification_code_store: Arc<dyn VerificationCodeStore>,
+    pub email_sender: Arc<dyn EmailSender>,
 }
 
-pub struct AuthService<A, U, S, P, T, R, I>
-where
-    A: AuthRepository + Send + Sync,
-    U: UserRepository + Send + Sync,
-    S: SessionRepository + Send + Sync,
-    P: PasswordHasher + Send + Sync,
-    T: AccessTokenProvider + Send + Sync,
-    R: RefreshTokenProvider + Send + Sync,
-    I: IdTokenVerifier + Send + Sync,
-{
-    repos: AuthRepositories<A, U, S>,
-    providers: AuthProviders<P, T, R, I>,
+pub struct AuthService {
+    repos: AuthRepositories,
+    providers: AuthProviders,
     config: AuthConfig,
 }
 
-impl<A, U, S, P, T, R, I> AuthService<A, U, S, P, T, R, I>
-where
-    A: AuthRepository + Send + Sync,
-    U: UserRepository + Send + Sync,
-    S: SessionRepository + Send + Sync,
-    P: PasswordHasher + Send + Sync,
-    T: AccessTokenProvider + Send + Sync,
-    R: RefreshTokenProvider + Send + Sync,
-    I: IdTokenVerifier + Send + Sync,
-{
-    pub fn new(
-        repos: AuthRepositories<A, U, S>,
-        providers: AuthProviders<P, T, R, I>,
-        config: AuthConfig,
-    ) -> Self {
+impl AuthService {
+    pub fn new(repos: AuthRepositories, providers: AuthProviders, config: AuthConfig) -> Self {
         Self {
             repos,
             providers,
             config,
         }
     }
-    pub async fn register_by_email(
-        &self,
-        new_user: NewUser,
-        credentials: EmailCredentials,
-        device_info: DeviceInfo,
-    ) -> Result<AuthResult, AppError> {
-        let password_digest = self
+    pub async fn send_verification_code(&self, email: Email) -> Result<(), AppError> {
+        if self
             .providers
-            .password_hasher
-            .hash(&credentials.password.into_inner())?;
-        let new_authentication = NewAuthentication::new(
-            Provider::Email,
-            credentials.email.into_inner(),
-            Some(password_digest),
+            .verification_code_store
+            .check_rate_limit(&email)
+            .await?
+        {
+            return Err(AuthenticationError::TooManyRequests.into());
+        }
+
+        let verification_data = VerificationData::new();
+        self.providers
+            .verification_code_store
+            .save(&email, &verification_data)
+            .await?;
+
+        let body = format!(
+            r#"
+            LiveJukeをご利用いただきありがとうございます。\n
+            認証コード: {}\n
+
+        "#,
+            &verification_data.code
         );
-        let user = self
-            .repos
-            .auth_repo
-            .create_user_with_authentication(new_user, new_authentication)
-            .await
-            .map_err(|e| match e.downcast() {
-                Ok(auth_err) => AppError::Authentication(auth_err),
-                Err(e) => AppError::Unexpected(e),
-            })?;
 
-        let (access_token, refresh_token) = self.create_session(&user, device_info).await?;
+        self.providers
+            .email_sender
+            .send(&email, "認証コード", &body)
+            .await?;
 
-        Ok(AuthResult {
-            user,
-            access_token,
-            refresh_token,
-        })
+        self.providers
+            .verification_code_store
+            .increment_rate_limit(&email)
+            .await?;
+
+        Ok(())
     }
-    pub async fn login_by_email(
+    pub async fn verify_code(
         &self,
-        credentials: EmailCredentials,
+        email: Email,
+        code: String,
         device_info: DeviceInfo,
     ) -> Result<AuthResult, AppError> {
+        let Some(data) = self.providers.verification_code_store.find(&email).await? else {
+            return Err(AuthenticationError::InvalidVerificationCode.into());
+        };
+
+        if data.code != code {
+            return Err(AuthenticationError::InvalidVerificationCode.into());
+        }
+
         let authentication = self
             .repos
             .auth_repo
-            .find_by_provider_uid(Provider::Email, &credentials.email.into_inner())
-            .await?
-            .ok_or(AuthenticationError::AuthenticationFailed)?;
-        if !self.providers.password_hasher.verify(
-            &credentials.password.into_inner(),
-            &authentication
-                .password_digest
-                .ok_or(AuthenticationError::AuthenticationFailed)?,
-        )? {
-            return Err(AuthenticationError::AuthenticationFailed.into());
-        }
-        let user = self
-            .repos
-            .user_repo
-            .find_by_id(authentication.user_id)
-            .await?
-            .ok_or(AuthenticationError::AuthenticationFailed)?;
+            .find_by_provider_uid(Provider::Google, email.as_ref())
+            .await?;
+
+        let user = if let Some(authentication) = authentication {
+            self.repos
+                .user_repo
+                .find_by_id(authentication.user_id)
+                .await?
+                .ok_or(AuthenticationError::AuthenticationFailed)?
+        } else {
+            let new_user = NewUser::new(email.as_ref());
+            let new_authentication = NewAuthentication::new(Provider::Google, email.as_ref(), None);
+            self.repos
+                .auth_repo
+                .create_user_with_authentication(new_user, new_authentication)
+                .await
+                .map_err(|e| {
+                    tracing::error!(error = %e, "failed to create_user_with_authentication");
+                    match e.downcast() {
+                        Ok(auth_err) => AppError::Authentication(auth_err),
+                        Err(e) => AppError::Unexpected(e),
+                    }
+                })?
+        };
 
         let (access_token, refresh_token) = self.create_session(&user, device_info).await?;
+
+        self.providers
+            .verification_code_store
+            .delete(&email)
+            .await?;
 
         Ok(AuthResult {
             user,
@@ -165,15 +173,8 @@ where
                 .await?
                 .ok_or(AuthenticationError::AuthenticationFailed)?
         } else {
-            let new_user = {
-                let display_name = if user_info.name.len() > 30 {
-                    user_info.name.chars().take(30).collect()
-                } else {
-                    user_info.name
-                };
-                NewUser::try_new(display_name, user_info.email)?
-            };
-            let new_authentication = NewAuthentication::new(Provider::Google, user_info.sub, None);
+            let new_user = NewUser::new(&user_info.email);
+            let new_authentication = NewAuthentication::new(Provider::Google, &user_info.sub, None);
             self.repos
                 .auth_repo
                 .create_user_with_authentication(new_user, new_authentication)

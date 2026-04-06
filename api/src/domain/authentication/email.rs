@@ -8,7 +8,7 @@ pub enum EmailError {
     TooShort,
 }
 
-#[nutype(sanitize(trim, lowercase), validate(with = validate_email, error = EmailError), derive(Deserialize, Debug, Clone))]
+#[nutype(sanitize(trim, lowercase), validate(with = validate_email, error = EmailError), derive(Deserialize, Debug, Clone, AsRef))]
 pub struct Email(String);
 
 fn validate_email(s: &str) -> Result<(), EmailError> {

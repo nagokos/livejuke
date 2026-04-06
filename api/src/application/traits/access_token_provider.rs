@@ -6,7 +6,7 @@ use crate::{
     },
 };
 
-pub trait AccessTokenProvider {
+pub trait AccessTokenProvider: Send + Sync {
     fn generate(&self, sub: Id<User>, role: Role) -> Result<AccessToken, anyhow::Error>;
     fn verify(&self, token: &str) -> Result<CurrentUser, anyhow::Error>;
 }

@@ -8,7 +8,7 @@ pub enum DisplayNameError {
     TooLong,
 }
 
-#[nutype(sanitize(trim), validate(with = validate_display_name, error = DisplayNameError), derive(Deserialize, Debug, Clone))]
+#[nutype(sanitize(trim), validate(with = validate_display_name, error = DisplayNameError), derive(Deserialize, Debug, Clone, AsRef))]
 pub struct DisplayName(String);
 
 fn validate_display_name(s: &str) -> Result<(), DisplayNameError> {

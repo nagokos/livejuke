@@ -2,10 +2,7 @@ use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
 
-use crate::domain::{
-    id::Id,
-    user::{display_name::DisplayName, error::UserError},
-};
+use crate::domain::id::Id;
 
 #[derive(Debug, Clone)]
 pub struct User {
@@ -46,15 +43,13 @@ impl FromStr for Role {
 
 #[derive(Debug)]
 pub struct NewUser {
-    pub display_name: DisplayName,
     pub email: String,
 }
 
 impl NewUser {
-    pub fn try_new(display_name: String, email: String) -> Result<Self, UserError> {
-        Ok(Self {
-            display_name: DisplayName::try_new(display_name)?,
-            email,
-        })
+    pub fn new(email: &str) -> Self {
+        Self {
+            email: email.to_string(),
+        }
     }
 }

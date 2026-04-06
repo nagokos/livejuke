@@ -1,11 +1,10 @@
-use anyhow::Ok;
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{PgPool, prelude::FromRow};
 
 use crate::{
     domain::{
         authentication::{
-            error::AuthenticationError,
             model::{Authentication, NewAuthentication, Provider},
             repository::AuthRepository,
         },
@@ -25,6 +24,7 @@ impl PgAuthenticationRepository {
     }
 }
 
+#[async_trait]
 impl AuthRepository for PgAuthenticationRepository {
     async fn create_user_with_authentication(
         &self,
@@ -39,7 +39,6 @@ impl AuthRepository for PgAuthenticationRepository {
             RETURNING *
         "#;
         let user: User = sqlx::query_as::<_, UserRow>(sql)
-            .bind(new_user.display_name.into_inner())
             .bind(new_user.email)
             .fetch_one(&mut *tx)
             .await?
@@ -49,22 +48,13 @@ impl AuthRepository for PgAuthenticationRepository {
             INSERT INTO authentications (user_id, provider, uid, password_digest)
             VALUES ($1, $2, $3, $4)
         "#;
-        let result = sqlx::query(sql)
+        sqlx::query(sql)
             .bind(user.id.get())
             .bind(new_authentication.provider.as_str())
             .bind(new_authentication.uid)
             .bind(new_authentication.password_digest)
             .execute(&mut *tx)
-            .await;
-
-        if let Err(e) = result {
-            match e {
-                sqlx::Error::Database(e) if e.code().as_deref() == Some("23505") => {
-                    return Err(AuthenticationError::EmailAlreadyExists.into());
-                }
-                _ => return Err(e.into()),
-            }
-        }
+            .await?;
 
         tx.commit().await?;
 

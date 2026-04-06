@@ -2,11 +2,7 @@ use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
 
-use crate::domain::{
-    authentication::{email::Email, error::AuthenticationError, password::Password},
-    id::Id,
-    user::model::User,
-};
+use crate::domain::{id::Id, user::model::User};
 
 #[derive(Debug, Clone)]
 pub struct Authentication {
@@ -27,10 +23,10 @@ pub struct NewAuthentication {
 }
 
 impl NewAuthentication {
-    pub fn new(provider: Provider, uid: String, password_digest: Option<String>) -> Self {
+    pub fn new(provider: Provider, uid: &str, password_digest: Option<String>) -> Self {
         Self {
             provider,
-            uid,
+            uid: uid.to_string(),
             password_digest,
         }
     }
@@ -60,20 +56,5 @@ impl FromStr for Provider {
             "google" => Ok(Self::Google),
             _ => Err(anyhow::anyhow!("unknown provider: {}", s)),
         }
-    }
-}
-
-#[derive(Debug)]
-pub struct EmailCredentials {
-    pub email: Email,
-    pub password: Password,
-}
-
-impl EmailCredentials {
-    pub fn try_new(email: String, password: String) -> Result<Self, AuthenticationError> {
-        Ok(Self {
-            email: Email::try_new(email)?,
-            password: Password::try_new(password)?,
-        })
     }
 }

@@ -1,5 +1,6 @@
 use std::sync::RwLock;
 
+use async_trait::async_trait;
 use jsonwebtoken::{DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -61,6 +62,7 @@ impl GoogleTokenVerifier {
     }
 }
 
+#[async_trait]
 impl IdTokenVerifier for GoogleTokenVerifier {
     async fn verify(&self, id_token: &str) -> Result<ExternalUserInfo, anyhow::Error> {
         let header = decode_header(id_token).map_err(|e| {

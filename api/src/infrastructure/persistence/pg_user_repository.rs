@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{PgPool, prelude::FromRow};
 
@@ -16,6 +17,7 @@ impl PgUserRepository {
     }
 }
 
+#[async_trait]
 impl UserRepository for PgUserRepository {
     async fn find_by_id(&self, user_id: Id<User>) -> Result<Option<User>, anyhow::Error> {
         let sql = r#"

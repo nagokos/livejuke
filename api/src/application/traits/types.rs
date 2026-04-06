@@ -1,3 +1,6 @@
+use rand::distr::{Alphanumeric, SampleString};
+use serde::{Deserialize, Serialize};
+
 use crate::domain::{
     id::Id,
     user::model::{Role, User},
@@ -50,4 +53,16 @@ pub struct ExternalUserInfo {
 pub struct CurrentUser {
     pub id: Id<User>,
     pub role: Role,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VerificationData {
+    pub code: String,
+}
+
+impl VerificationData {
+    pub fn new() -> Self {
+        let code = Alphanumeric.sample_string(&mut rand::rng(), 6);
+        Self { code }
+    }
 }

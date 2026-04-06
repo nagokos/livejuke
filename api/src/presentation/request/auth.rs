@@ -2,18 +2,14 @@ use serde::Deserialize;
 use utoipa::ToSchema;
 
 #[derive(Deserialize, ToSchema)]
-pub struct RegisterEmailInput {
-    pub display_name: String,
+pub struct SendCodeInput {
     pub email: String,
-    pub password: String,
-    pub device_info: DeviceInfoInput,
 }
 
 #[derive(Deserialize, ToSchema)]
-pub struct LoginEmailInput {
+pub struct VerifyCodeInput {
     pub email: String,
-    pub password: String,
-    pub device_info: DeviceInfoInput,
+    pub code: String,
 }
 
 #[derive(Deserialize, ToSchema)]

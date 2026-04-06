@@ -1,8 +1,9 @@
-use crate::domain::authentication::model::EmailCredentials;
+use crate::domain::authentication::email::Email;
+use crate::domain::authentication::error::AuthenticationError;
 use crate::domain::session::model::DeviceInfo;
-use crate::domain::user::model::NewUser;
 use crate::presentation::error::ErrorResponse;
-use crate::presentation::request::auth::{AuthGoogleInput, LoginEmailInput, RegisterEmailInput};
+use crate::presentation::request::auth::{AuthGoogleInput, SendCodeInput, VerifyCodeInput};
+use crate::presentation::response::verificatin_code_response::VerificationCodeResponse;
 use crate::{
     AppState, application::error::AppError, presentation::response::auth_response::AuthResponse,
 };
@@ -12,61 +13,53 @@ use utoipa_axum::routes;
 
 #[utoipa::path(
     post,
-    path = "/register/email",
-    request_body = RegisterEmailInput,
+    path = "/email/send-code",
+    request_body = SendCodeInput,
     responses(
-        (status = 201, body = AuthResponse),
+        (status = 200, body = VerificationCodeResponse),
         (status = 400, body = ErrorResponse, description = "invalid email or password"),
         (status = 409, body = ErrorResponse, description = "email already exists"),
         (status = 500, body = ErrorResponse,description = "internal server error"),
     )
 )]
-async fn register_by_email(
+async fn send_code(
     State(state): State<AppState>,
-    Json(input): Json<RegisterEmailInput>,
-) -> Result<(StatusCode, Json<AuthResponse>), AppError> {
-    let new_user = NewUser::try_new(input.display_name, input.email.clone())?;
-    let credentials = EmailCredentials::try_new(input.email, input.password)?;
-    let device_info = DeviceInfo::new(
-        input.device_info.device_name,
-        input.device_info.model_name,
-        input.device_info.os,
-    );
-    let result = state
+    Json(input): Json<SendCodeInput>,
+) -> Result<(StatusCode, Json<VerificationCodeResponse>), AppError> {
+    state
         .auth_service
-        .register_by_email(new_user, credentials, device_info)
+        .send_verification_code(Email::try_new(input.email).map_err(AuthenticationError::Email)?)
         .await?;
 
-    Ok((StatusCode::CREATED, Json(result.into())))
+    Ok((
+        StatusCode::OK,
+        Json(VerificationCodeResponse::new(state.resend_cooldown_seconds)),
+    ))
 }
 
 #[utoipa::path(
     post,
-    path = "/login/email",
-    request_body = LoginEmailInput,
+    path = "/email/verify-code",
+    request_body = VerifyCodeInput,
     responses(
-        (status = 200, body = AuthResponse),
+        (status = 200, body = VerificationCodeResponse),
         (status = 401, body = ErrorResponse, description = "unauthorized error"),
         (status = 500, body = ErrorResponse, description = "internal server error"),
     )
 )]
-async fn login_by_email(
+async fn verify_code(
     State(state): State<AppState>,
-    Json(input): Json<LoginEmailInput>,
-) -> Result<(StatusCode, Json<AuthResponse>), AppError> {
-    let credentials = EmailCredentials::try_new(input.email, input.password)?;
-    let device_info = DeviceInfo::new(
-        input.device_info.device_name,
-        input.device_info.model_name,
-        input.device_info.os,
-    );
-
-    let result = state
+    Json(input): Json<VerifyCodeInput>,
+) -> Result<(StatusCode, Json<VerificationCodeResponse>), AppError> {
+    state
         .auth_service
-        .login_by_email(credentials, device_info)
+        .send_verification_code(Email::try_new(input.email).map_err(AuthenticationError::Email)?)
         .await?;
 
-    Ok((StatusCode::OK, Json(result.into())))
+    Ok((
+        StatusCode::OK,
+        Json(VerificationCodeResponse::new(state.resend_cooldown_seconds)),
+    ))
 }
 
 #[utoipa::path(
@@ -99,7 +92,7 @@ async fn auth_google(
 
 pub fn create_auth_router() -> OpenApiRouter<AppState> {
     OpenApiRouter::new()
-        .routes(routes!(register_by_email))
-        .routes(routes!(login_by_email))
+        .routes(routes!(send_code))
+        .routes(routes!(verify_code))
         .routes(routes!(auth_google))
 }

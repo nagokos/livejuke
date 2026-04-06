@@ -8,13 +8,6 @@ use crate::{
 impl IntoResponse for AuthenticationError {
     fn into_response(self) -> axum::response::Response {
         let (code, error) = match self {
-            Self::EmailAlreadyExists => (
-                StatusCode::CONFLICT,
-                ErrorResponse {
-                    code: ErrorCode::EmailAlreadyExists,
-                    message: self.to_string(),
-                },
-            ),
             Self::Email(_) => (
                 StatusCode::BAD_REQUEST,
                 ErrorResponse {
@@ -22,10 +15,17 @@ impl IntoResponse for AuthenticationError {
                     message: self.to_string(),
                 },
             ),
-            Self::Password(_) => (
-                StatusCode::BAD_REQUEST,
+            Self::InvalidVerificationCode => (
+                StatusCode::UNAUTHORIZED,
                 ErrorResponse {
-                    code: ErrorCode::InvalidPassword,
+                    code: ErrorCode::InvalidVerificationCode,
+                    message: self.to_string(),
+                },
+            ),
+            Self::TooManyRequests => (
+                StatusCode::TOO_MANY_REQUESTS,
+                ErrorResponse {
+                    code: ErrorCode::RateLimitExceeded,
                     message: self.to_string(),
                 },
             ),

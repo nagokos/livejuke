@@ -1,8 +1,8 @@
+use async_trait::async_trait;
+
 use crate::domain::session::model::{NewSession, Session};
 
-pub trait SessionRepository {
-    fn create(
-        &self,
-        new_session: NewSession,
-    ) -> impl Future<Output = Result<Session, anyhow::Error>> + Send;
+#[async_trait]
+pub trait SessionRepository: Send + Sync {
+    async fn create(&self, new_session: NewSession) -> Result<Session, anyhow::Error>;
 }

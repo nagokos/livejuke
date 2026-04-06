@@ -8,7 +8,6 @@ use axum::{
 
 use crate::{
     AppState,
-    application::traits::access_token_provider::AccessTokenProvider,
     presentation::{error::ErrorResponse, error_code::ErrorCode},
 };
 

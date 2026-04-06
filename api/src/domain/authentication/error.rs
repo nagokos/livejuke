@@ -1,13 +1,13 @@
-use crate::domain::authentication::{email::EmailError, password::PasswordError};
+use crate::domain::authentication::email::EmailError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum AuthenticationError {
     #[error(transparent)]
     Email(#[from] EmailError),
-    #[error(transparent)]
-    Password(#[from] PasswordError),
-    #[error("email already exists")]
-    EmailAlreadyExists,
+    #[error("invalid verification code")]
+    InvalidVerificationCode,
     #[error("authentication failed")]
     AuthenticationFailed,
+    #[error("too many requests")]
+    TooManyRequests,
 }
