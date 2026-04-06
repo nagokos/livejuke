@@ -1,6 +1,8 @@
 use serde::Deserialize;
 use utoipa::ToSchema;
 
+use crate::domain::session::model::DeviceInfo;
+
 #[derive(Deserialize, ToSchema)]
 pub struct SendCodeInput {
     pub email: String,
@@ -10,6 +12,7 @@ pub struct SendCodeInput {
 pub struct VerifyCodeInput {
     pub email: String,
     pub code: String,
+    pub device_info: DeviceInfoInput,
 }
 
 #[derive(Deserialize, ToSchema)]
@@ -23,4 +26,14 @@ pub struct DeviceInfoInput {
     pub device_name: Option<String>,
     pub model_name: Option<String>,
     pub os: String,
+}
+
+impl From<DeviceInfoInput> for DeviceInfo {
+    fn from(value: DeviceInfoInput) -> Self {
+        Self {
+            device_name: value.device_name,
+            model_name: value.model_name,
+            os: value.os,
+        }
+    }
 }

@@ -15,6 +15,7 @@ pub struct Config {
     pub smtp_username: String,
     pub smtp_password: String,
     pub smtp_from: String,
+    pub smtp_tls: String,
 }
 
 impl Config {
@@ -36,6 +37,7 @@ impl Config {
             smtp_username: env::var("SMTP_USERNAME")?,
             smtp_password: env::var("SMTP_PASSWORD")?,
             smtp_from: env::var("SMTP_FROM")?,
+            smtp_tls: env::var("SMTP_TLS")?,
         })
     }
 }

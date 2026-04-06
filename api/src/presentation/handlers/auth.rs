@@ -1,6 +1,5 @@
 use crate::domain::authentication::email::Email;
 use crate::domain::authentication::error::AuthenticationError;
-use crate::domain::session::model::DeviceInfo;
 use crate::presentation::error::ErrorResponse;
 use crate::presentation::request::auth::{AuthGoogleInput, SendCodeInput, VerifyCodeInput};
 use crate::presentation::response::verificatin_code_response::VerificationCodeResponse;
@@ -17,9 +16,9 @@ use utoipa_axum::routes;
     request_body = SendCodeInput,
     responses(
         (status = 200, body = VerificationCodeResponse),
-        (status = 400, body = ErrorResponse, description = "invalid email or password"),
-        (status = 409, body = ErrorResponse, description = "email already exists"),
-        (status = 500, body = ErrorResponse,description = "internal server error"),
+        (status = 400, body = ErrorResponse, description = "invalid email"),
+        (status = 429, body = ErrorResponse, description = "too many request"),
+        (status = 500, body = ErrorResponse, description = "internal server error"),
     )
 )]
 async fn send_code(
@@ -42,7 +41,8 @@ async fn send_code(
     path = "/email/verify-code",
     request_body = VerifyCodeInput,
     responses(
-        (status = 200, body = VerificationCodeResponse),
+        (status = 200, body = AuthResponse),
+        (status = 400, body = ErrorResponse, description = "invalid email"),
         (status = 401, body = ErrorResponse, description = "unauthorized error"),
         (status = 500, body = ErrorResponse, description = "internal server error"),
     )
@@ -50,16 +50,17 @@ async fn send_code(
 async fn verify_code(
     State(state): State<AppState>,
     Json(input): Json<VerifyCodeInput>,
-) -> Result<(StatusCode, Json<VerificationCodeResponse>), AppError> {
-    state
+) -> Result<(StatusCode, Json<AuthResponse>), AppError> {
+    let result = state
         .auth_service
-        .send_verification_code(Email::try_new(input.email).map_err(AuthenticationError::Email)?)
+        .verify_code(
+            Email::try_new(input.email).map_err(AuthenticationError::Email)?,
+            input.code,
+            input.device_info.into(),
+        )
         .await?;
 
-    Ok((
-        StatusCode::OK,
-        Json(VerificationCodeResponse::new(state.resend_cooldown_seconds)),
-    ))
+    Ok((StatusCode::OK, Json(result.into())))
 }
 
 #[utoipa::path(
@@ -76,15 +77,9 @@ async fn auth_google(
     State(state): State<AppState>,
     Json(input): Json<AuthGoogleInput>,
 ) -> Result<(StatusCode, Json<AuthResponse>), AppError> {
-    let device_info = DeviceInfo::new(
-        input.device_info.device_name,
-        input.device_info.model_name,
-        input.device_info.os,
-    );
-
     let result = state
         .auth_service
-        .auth_google(input.id_token, device_info)
+        .auth_google(input.id_token, input.device_info.into())
         .await?;
 
     Ok((StatusCode::OK, Json(result.into())))

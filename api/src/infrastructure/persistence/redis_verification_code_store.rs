@@ -21,22 +21,20 @@ impl RedisVerificationCodeStore {
 
 #[async_trait]
 impl VerificationCodeStore for RedisVerificationCodeStore {
-    async fn check_rate_limit(&self, email: &Email) -> Result<bool, anyhow::Error> {
+    async fn is_rate_limited(&self, email: &Email) -> Result<bool, anyhow::Error> {
         let mut conn = self.conn.clone();
-        let count: i64 = conn
+        let count: Option<i64> = conn
             .get(RedisKey::RateLimitSendCode(email.as_ref()))
             .await?;
-        if count > 3 {
-            return Ok(false);
-        }
 
-        Ok(true)
+        Ok(count.unwrap_or(0) > 3)
     }
     async fn increment_rate_limit(&self, email: &Email) -> Result<(), anyhow::Error> {
         let mut conn = self.conn.clone();
         let count: i64 = conn
             .incr(RedisKey::RateLimitSendCode(email.as_ref()), 1)
             .await?;
+        // 初回のみ時間をつける
         if count == 1 {
             let _: () = conn
                 .expire(RedisKey::RateLimitSendCode(email.as_ref()), 600)
@@ -44,6 +42,20 @@ impl VerificationCodeStore for RedisVerificationCodeStore {
         }
 
         Ok(())
+    }
+    async fn increment_attempts(&self, email: &Email) -> Result<(), anyhow::Error> {
+        let mut conn = self.conn.clone();
+        let _: () = conn
+            .incr(RedisKey::AttemptVerify(email.as_ref()), 1)
+            .await?;
+
+        Ok(())
+    }
+    async fn is_max_attempts(&self, email: &Email) -> Result<bool, anyhow::Error> {
+        let mut conn = self.conn.clone();
+        let count: Option<i64> = conn.get(RedisKey::AttemptVerify(email.as_ref())).await?;
+
+        Ok(count.unwrap_or(0) > 5)
     }
     async fn save(&self, email: &Email, data: &VerificationData) -> Result<(), anyhow::Error> {
         let mut conn = self.conn.clone();

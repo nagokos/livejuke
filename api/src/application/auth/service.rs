@@ -66,7 +66,7 @@ impl AuthService {
         if self
             .providers
             .verification_code_store
-            .check_rate_limit(&email)
+            .is_rate_limited(&email)
             .await?
         {
             return Err(AuthenticationError::TooManyRequests.into());
@@ -79,17 +79,13 @@ impl AuthService {
             .await?;
 
         let body = format!(
-            r#"
-            LiveJukeをご利用いただきありがとうございます。\n
-            認証コード: {}\n
-
-        "#,
+            "LiveJukeをご利用いただきありがとうございます。 認証コード: {}",
             &verification_data.code
         );
 
         self.providers
             .email_sender
-            .send(&email, "認証コード", &body)
+            .send(&email, "認証コード", body)
             .await?;
 
         self.providers
@@ -110,13 +106,28 @@ impl AuthService {
         };
 
         if data.code != code {
+            self.providers
+                .verification_code_store
+                .increment_attempts(&email)
+                .await?;
+            if self
+                .providers
+                .verification_code_store
+                .is_max_attempts(&email)
+                .await?
+            {
+                self.providers
+                    .verification_code_store
+                    .delete(&email)
+                    .await?
+            }
             return Err(AuthenticationError::InvalidVerificationCode.into());
         }
 
         let authentication = self
             .repos
             .auth_repo
-            .find_by_provider_uid(Provider::Google, email.as_ref())
+            .find_by_provider_uid(Provider::Email, email.as_ref())
             .await?;
 
         let user = if let Some(authentication) = authentication {
@@ -127,7 +138,7 @@ impl AuthService {
                 .ok_or(AuthenticationError::AuthenticationFailed)?
         } else {
             let new_user = NewUser::new(email.as_ref());
-            let new_authentication = NewAuthentication::new(Provider::Google, email.as_ref(), None);
+            let new_authentication = NewAuthentication::new(Provider::Email, email.as_ref(), None);
             self.repos
                 .auth_repo
                 .create_user_with_authentication(new_user, new_authentication)
@@ -141,12 +152,12 @@ impl AuthService {
                 })?
         };
 
-        let (access_token, refresh_token) = self.create_session(&user, device_info).await?;
-
         self.providers
             .verification_code_store
             .delete(&email)
             .await?;
+
+        let (access_token, refresh_token) = self.create_session(&user, device_info).await?;
 
         Ok(AuthResult {
             user,

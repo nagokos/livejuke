@@ -6,6 +6,74 @@ info:
     name: ""
   version: 0.1.0
 paths:
+  /auth/email/send-code:
+    post:
+      operationId: send_code
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendCodeInput'
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationCodeResponse'
+        "400":
+          description: invalid email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "429":
+          description: too many request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/email/verify-code:
+    post:
+      operationId: verify_code
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyCodeInput'
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "400":
+          description: invalid email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: unauthorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /auth/google:
     post:
       operationId: auth_google
@@ -24,68 +92,6 @@ paths:
                 $ref: '#/components/schemas/AuthResponse'
         "401":
           description: unauthorized error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        "500":
-          description: internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /auth/login/email:
-    post:
-      operationId: login_by_email
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginEmailInput'
-        required: true
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        "401":
-          description: unauthorized error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        "500":
-          description: internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /auth/register/email:
-    post:
-      operationId: register_by_email
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegisterEmailInput'
-        required: true
-      responses:
-        "201":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        "400":
-          description: invalid email or password
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        "409":
-          description: email already exists
           content:
             application/json:
               schema:
@@ -139,10 +145,9 @@ components:
     ErrorCode:
       type: string
       enum:
-        - EMAIL_ALREADY_EXISTS
         - INVALID_EMAIL
-        - INVALID_PASSWORD
         - INVALID_DISPLAY_NAME
+        - INVALID_VERIFICATION_CODE
         - RATE_LIMIT_EXCEEDED
         - SESSION_CREATION_FAILED
         - INTERNAL_ERROR
@@ -157,34 +162,12 @@ components:
           $ref: '#/components/schemas/ErrorCode'
         message:
           type: string
-    LoginEmailInput:
+    SendCodeInput:
       type: object
       required:
         - email
-        - password
-        - device_info
       properties:
-        device_info:
-          $ref: '#/components/schemas/DeviceInfoInput'
         email:
-          type: string
-        password:
-          type: string
-    RegisterEmailInput:
-      type: object
-      required:
-        - display_name
-        - email
-        - password
-        - device_info
-      properties:
-        device_info:
-          $ref: '#/components/schemas/DeviceInfoInput'
-        display_name:
-          type: string
-        email:
-          type: string
-        password:
           type: string
     UserResponse:
       type: object
@@ -199,4 +182,26 @@ components:
           type: integer
           format: int64
         role:
+          type: string
+    VerificationCodeResponse:
+      type: object
+      required:
+        - resend_cooldown_seconds
+      properties:
+        resend_cooldown_seconds:
+          type: integer
+          format: int32
+          minimum: 0
+    VerifyCodeInput:
+      type: object
+      required:
+        - email
+        - code
+        - device_info
+      properties:
+        code:
+          type: string
+        device_info:
+          $ref: '#/components/schemas/DeviceInfoInput'
+        email:
           type: string

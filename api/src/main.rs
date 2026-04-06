@@ -27,7 +27,8 @@ use crate::{
             opaque_refresh_token_provider::OpaqueRefreshTokenProvider,
         },
         external::{
-            google_token_verifier::GoogleTokenVerifier, smtp_email_sender::SmtpEmailSender,
+            google_token_verifier::GoogleTokenVerifier,
+            smtp_email_sender::{SmtpConfig, SmtpEmailSender},
         },
         persistence::{
             pg_authentication_repository::PgAuthenticationRepository,
@@ -111,13 +112,14 @@ async fn main() -> anyhow::Result<()> {
                 GoogleTokenVerifier::new(config.google_client_id, reqwest::Client::new()).await?,
             ),
             verification_code_store: Arc::new(RedisVerificationCodeStore::new(redis_conn.clone())),
-            email_sender: Arc::new(SmtpEmailSender::try_new(
-                &config.smtp_host,
-                config.smtp_port,
-                &config.smtp_username,
-                &config.smtp_password,
-                &config.smtp_from,
-            )?),
+            email_sender: Arc::new(SmtpEmailSender::try_new(SmtpConfig {
+                host: config.smtp_host,
+                port: config.smtp_port,
+                username: config.smtp_username,
+                password: config.smtp_password,
+                from: config.smtp_from,
+                tls: config.smtp_tls,
+            })?),
         };
         let auth_config = AuthConfig::new(config.refresh_token_expiration);
 
