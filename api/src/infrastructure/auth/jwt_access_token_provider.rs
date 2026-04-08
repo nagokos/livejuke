@@ -34,8 +34,8 @@ impl Claims {
 
 #[derive(Clone)]
 pub struct JwtAccessTokenProvider {
-    pub jwt_secret: String,
-    pub jwt_expiration: i64,
+    jwt_secret: String,
+    jwt_expiration: i64,
 }
 
 impl JwtAccessTokenProvider {

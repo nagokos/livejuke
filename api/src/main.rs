@@ -4,7 +4,6 @@ use std::{
     time::Duration,
 };
 
-use anyhow::Ok;
 use axum::{Json, http::StatusCode, response::IntoResponse};
 use sqlx::postgres::PgPoolOptions;
 use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder};

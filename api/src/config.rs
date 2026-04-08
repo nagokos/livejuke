@@ -15,8 +15,8 @@ pub struct Config {
     pub smtp_password: String,
     pub smtp_from: String,
     pub smtp_tls: String,
-    pub max_attempts: u8,
-    pub rate_limit: u8,
+    pub max_attempts: i64,
+    pub rate_limit: i64,
 }
 
 impl Config {

@@ -11,12 +11,12 @@ use crate::{
 
 pub struct RedisVerificationCodeStore {
     conn: MultiplexedConnection,
-    max_attempts: u8,
-    rate_limit: u8,
+    max_attempts: i64,
+    rate_limit: i64,
 }
 
 impl RedisVerificationCodeStore {
-    pub fn new(conn: MultiplexedConnection, max_attempts: u8, rate_limit: u8) -> Self {
+    pub fn new(conn: MultiplexedConnection, max_attempts: i64, rate_limit: i64) -> Self {
         Self {
             conn,
             max_attempts,
@@ -27,15 +27,13 @@ impl RedisVerificationCodeStore {
 
 #[async_trait]
 impl VerificationCodeStore for RedisVerificationCodeStore {
-    async fn is_rate_limited(&self, email: &Email) -> Result<bool, anyhow::Error> {
-        let mut conn = self.conn.clone();
-        let count: Option<i64> = conn
-            .get(RedisKey::RateLimitSendCode(email.as_ref()))
-            .await?;
-
-        Ok(count.unwrap_or(0) > self.rate_limit.into())
+    fn is_rate_limited(&self, count: i64) -> bool {
+        count > self.rate_limit
     }
-    async fn increment_rate_limit(&self, email: &Email) -> Result<(), anyhow::Error> {
+    fn is_max_attempts(&self, count: i64) -> bool {
+        count > self.max_attempts
+    }
+    async fn increment_rate_limit(&self, email: &Email) -> Result<i64, anyhow::Error> {
         let mut conn = self.conn.clone();
         let count: i64 = conn
             .incr(RedisKey::RateLimitSendCode(email.as_ref()), 1)
@@ -46,9 +44,9 @@ impl VerificationCodeStore for RedisVerificationCodeStore {
                 .await?;
         }
 
-        Ok(())
+        Ok(count)
     }
-    async fn increment_attempts(&self, email: &Email) -> Result<(), anyhow::Error> {
+    async fn increment_attempts(&self, email: &Email) -> Result<i64, anyhow::Error> {
         let mut conn = self.conn.clone();
         let count: i64 = conn
             .incr(RedisKey::AttemptVerify(email.as_ref()), 1)
@@ -59,13 +57,7 @@ impl VerificationCodeStore for RedisVerificationCodeStore {
                 .await?;
         }
 
-        Ok(())
-    }
-    async fn is_max_attempts(&self, email: &Email) -> Result<bool, anyhow::Error> {
-        let mut conn = self.conn.clone();
-        let count: Option<i64> = conn.get(RedisKey::AttemptVerify(email.as_ref())).await?;
-
-        Ok(count.unwrap_or(0) > self.max_attempts.into())
+        Ok(count)
     }
     async fn save(&self, email: &Email, data: &VerificationData) -> Result<(), anyhow::Error> {
         let mut conn = self.conn.clone();

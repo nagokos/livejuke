@@ -45,7 +45,7 @@ impl GoogleTokenVerifier {
     async fn refresh_keys(&self) -> Result<(), anyhow::Error> {
         let response = self
             .http_client
-            .get("https://www.googleapis.com/oauth2/v3/certs")
+            .get(GOOGLE_JWKS_URI)
             .send()
             .await?
             .text()

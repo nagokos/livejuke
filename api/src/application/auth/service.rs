@@ -63,11 +63,15 @@ impl AuthService {
         }
     }
     pub async fn send_verification_code(&self, email: Email) -> Result<(), AppError> {
+        let count = self
+            .providers
+            .verification_code_store
+            .increment_rate_limit(&email)
+            .await?;
         if self
             .providers
             .verification_code_store
-            .is_rate_limited(&email)
-            .await?
+            .is_rate_limited(count)
         {
             return Err(AuthenticationError::TooManyRequests.into());
         }
@@ -88,11 +92,6 @@ impl AuthService {
             .send(&email, "認証コード", body)
             .await?;
 
-        self.providers
-            .verification_code_store
-            .increment_rate_limit(&email)
-            .await?;
-
         Ok(())
     }
     pub async fn verify_code(
@@ -106,15 +105,15 @@ impl AuthService {
         };
 
         if data.code != code {
-            self.providers
+            let count = self
+                .providers
                 .verification_code_store
                 .increment_attempts(&email)
                 .await?;
             if self
                 .providers
                 .verification_code_store
-                .is_max_attempts(&email)
-                .await?
+                .is_max_attempts(count)
             {
                 self.providers
                     .verification_code_store

@@ -2,9 +2,9 @@ use nutype::nutype;
 
 #[derive(Debug, thiserror::Error)]
 pub enum DisplayNameError {
-    #[error("display_name address is empty")]
+    #[error("display_name is empty")]
     Empty,
-    #[error("display_name address is long")]
+    #[error("display_name is long")]
     TooLong,
 }
 
