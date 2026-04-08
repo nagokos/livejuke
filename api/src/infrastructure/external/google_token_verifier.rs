@@ -16,7 +16,6 @@ struct GoogleResponse {
     sub: String,
     email: String,
     email_verified: bool,
-    name: String,
 }
 
 pub struct GoogleTokenVerifier {
@@ -125,7 +124,6 @@ impl IdTokenVerifier for GoogleTokenVerifier {
         Ok(ExternalUserInfo {
             sub: decoded_token.claims.sub,
             email: decoded_token.claims.email,
-            name: decoded_token.claims.name,
         })
     }
 }
