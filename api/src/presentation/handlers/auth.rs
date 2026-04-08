@@ -112,7 +112,7 @@ async fn auth_refresh(
 #[utoipa::path(
     post,
     path = "/logout",
-    request_body = AuthRefreshInput,
+    request_body = LogoutInput,
     responses(
         (status = 204),
         (status = 401, body = ErrorResponse, description = "unauthorized error"),
@@ -128,7 +128,7 @@ async fn logout(
         .logout(input.refresh_token.into())
         .await?;
 
-    Ok(StatusCode::OK)
+    Ok(StatusCode::NO_CONTENT)
 }
 
 pub fn create_auth_router() -> OpenApiRouter<AppState> {

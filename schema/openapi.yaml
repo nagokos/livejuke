@@ -109,7 +109,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthRefreshInput'
+              $ref: '#/components/schemas/LogoutInput'
         required: true
       responses:
         "204":
@@ -222,6 +222,13 @@ components:
         code:
           $ref: '#/components/schemas/ErrorCode'
         message:
+          type: string
+    LogoutInput:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
           type: string
     SendCodeInput:
       type: object

@@ -279,7 +279,7 @@ impl AuthService {
 
         Ok((access_token, refresh_token))
     }
-    pub async fn logout(&self, refresh_token: RefreshToken) -> Result<(), anyhow::Error> {
+    pub async fn logout(&self, refresh_token: RefreshToken) -> Result<(), AppError> {
         let hash = self.providers.refresh_token_provider.hash(&refresh_token);
         self.repos.session_repo.revoke(&hash).await?;
         Ok(())

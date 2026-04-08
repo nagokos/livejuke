@@ -120,6 +120,9 @@ export interface components {
 			code: components["schemas"]["ErrorCode"];
 			message: string;
 		};
+		LogoutInput: {
+			refresh_token: string;
+		};
 		SendCodeInput: {
 			email: string;
 		};
@@ -297,7 +300,7 @@ export interface operations {
 		};
 		requestBody: {
 			content: {
-				"application/json": components["schemas"]["AuthRefreshInput"];
+				"application/json": components["schemas"]["LogoutInput"];
 			};
 		};
 		responses: {

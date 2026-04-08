@@ -16,7 +16,7 @@ fn validate_display_name(s: &str) -> Result<(), DisplayNameError> {
         return Err(DisplayNameError::Empty);
     }
 
-    if s.chars().count() > 30 {
+    if s.chars().count() > 20 {
         return Err(DisplayNameError::TooLong);
     }
 
