@@ -41,6 +41,7 @@ impl AuthRepository for PgAuthenticationRepository {
             RETURNING 
                 id,
                 display_name,
+                email,
                 role,
                 created_at,
                 updated_at

@@ -33,7 +33,7 @@ impl VerificationCodeStore for RedisVerificationCodeStore {
             .get(RedisKey::RateLimitSendCode(email.as_ref()))
             .await?;
 
-        Ok(count.unwrap_or(0) > 3)
+        Ok(count.unwrap_or(0) > self.rate_limit.into())
     }
     async fn increment_rate_limit(&self, email: &Email) -> Result<(), anyhow::Error> {
         let mut conn = self.conn.clone();
@@ -61,7 +61,7 @@ impl VerificationCodeStore for RedisVerificationCodeStore {
         let mut conn = self.conn.clone();
         let count: Option<i64> = conn.get(RedisKey::AttemptVerify(email.as_ref())).await?;
 
-        Ok(count.unwrap_or(0) > 5)
+        Ok(count.unwrap_or(0) > self.max_attempts.into())
     }
     async fn save(&self, email: &Email, data: &VerificationData) -> Result<(), anyhow::Error> {
         let mut conn = self.conn.clone();

@@ -8,6 +8,13 @@ use crate::{
 impl IntoResponse for SessionError {
     fn into_response(self) -> axum::response::Response {
         let (code, error) = match self {
+            Self::InvalidRefreshToken => (
+                StatusCode::UNAUTHORIZED,
+                ErrorResponse {
+                    code: ErrorCode::InvalidRefreshToken,
+                    message: self.to_string(),
+                },
+            ),
             Self::CreationFailed => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ErrorResponse {

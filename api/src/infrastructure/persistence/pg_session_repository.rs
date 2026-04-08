@@ -26,7 +26,7 @@ impl PgSessionRepository {
 impl SessionRepository for PgSessionRepository {
     async fn create(&self, new_session: NewSession) -> Result<Session, anyhow::Error> {
         let sql = r#"
-            INSERT INTO refresh_tokens (
+            INSERT INTO sessions (
                 user_id,
                 token_hash,
                 device_name,
@@ -63,7 +63,7 @@ impl SessionRepository for PgSessionRepository {
     }
     async fn find_by_hash(&self, token_hash: &str) -> Result<Option<Session>, anyhow::Error> {
         let sql = r#"
-            SELECT * FROM refresh_tokens WHERE token_hash = $1;
+            SELECT * FROM sessions WHERE token_hash = $1;
         "#;
 
         sqlx::query_as::<_, SessionRow>(sql)
@@ -75,7 +75,7 @@ impl SessionRepository for PgSessionRepository {
     }
     async fn revoke(&self, token_hash: &str) -> Result<(), anyhow::Error> {
         let sql = r#"
-            UPDATE refresh_tokens 
+            UPDATE sessions 
             SET 
                 is_revoked = true
             WHERE token_hash = $1
@@ -90,7 +90,7 @@ impl SessionRepository for PgSessionRepository {
     }
     async fn revoke_all_by_user_id(&self, user_id: Id<User>) -> Result<(), anyhow::Error> {
         let sql = r#"
-            UPDATE refresh_tokens 
+            UPDATE sessions 
             SET 
                 is_revoked = true
             WHERE user_id = $1

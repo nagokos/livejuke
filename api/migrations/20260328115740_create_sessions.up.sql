@@ -1,4 +1,4 @@
-CREATE TABLE refresh_tokens(
+CREATE TABLE sessions(
 	id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 	token_hash TEXT NOT NULL UNIQUE,
@@ -10,7 +10,7 @@ CREATE TABLE refresh_tokens(
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+CREATE INDEX idx_sessions_user_id ON sessions(user_id);
 CREATE TRIGGER set_updated_at
-    BEFORE UPDATE ON refresh_tokens
+    BEFORE UPDATE ON sessions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();

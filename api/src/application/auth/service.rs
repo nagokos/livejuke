@@ -211,7 +211,7 @@ impl AuthService {
         let hash = self.providers.refresh_token_provider.hash(&refresh_token);
 
         let Some(token) = self.repos.session_repo.find_by_hash(&hash).await? else {
-            return Err(AuthenticationError::InvalidRefreshToken.into());
+            return Err(SessionError::InvalidRefreshToken.into());
         };
 
         if token.is_revoked {
@@ -220,11 +220,11 @@ impl AuthService {
                 .session_repo
                 .revoke_all_by_user_id(token.user_id)
                 .await?;
-            return Err(AuthenticationError::InvalidRefreshToken.into());
+            return Err(SessionError::InvalidRefreshToken.into());
         }
 
         if token.expires_at < Utc::now() {
-            return Err(AuthenticationError::InvalidRefreshToken.into());
+            return Err(SessionError::InvalidRefreshToken.into());
         }
 
         self.repos.session_repo.revoke(&token.token_hash).await?;
@@ -234,7 +234,7 @@ impl AuthService {
             .user_repo
             .find_by_id(token.user_id)
             .await?
-            .ok_or(AuthenticationError::InvalidRefreshToken)?;
+            .ok_or(SessionError::InvalidRefreshToken)?;
 
         let (access_token, refresh_token) = self.create_session(&user, token.device_info).await?;
 

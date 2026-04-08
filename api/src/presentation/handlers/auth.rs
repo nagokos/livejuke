@@ -125,7 +125,7 @@ async fn logout(
 ) -> Result<StatusCode, AppError> {
     state
         .auth_service
-        .auth_refresh(input.refresh_token.into())
+        .logout(input.refresh_token.into())
         .await?;
 
     Ok(StatusCode::OK)
