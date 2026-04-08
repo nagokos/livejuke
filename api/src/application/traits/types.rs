@@ -52,7 +52,6 @@ impl std::fmt::Display for AccessToken {
 pub struct ExternalUserInfo {
     pub sub: String,
     pub email: String,
-    pub name: String,
 }
 
 #[derive(Debug, Clone)]

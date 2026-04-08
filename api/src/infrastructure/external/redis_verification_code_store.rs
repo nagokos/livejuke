@@ -40,7 +40,6 @@ impl VerificationCodeStore for RedisVerificationCodeStore {
         let count: i64 = conn
             .incr(RedisKey::RateLimitSendCode(email.as_ref()), 1)
             .await?;
-        // 初回のみ時間をつける
         if count == 1 {
             let _: () = conn
                 .expire(RedisKey::RateLimitSendCode(email.as_ref()), 600)
@@ -51,9 +50,14 @@ impl VerificationCodeStore for RedisVerificationCodeStore {
     }
     async fn increment_attempts(&self, email: &Email) -> Result<(), anyhow::Error> {
         let mut conn = self.conn.clone();
-        let _: () = conn
+        let count: i64 = conn
             .incr(RedisKey::AttemptVerify(email.as_ref()), 1)
             .await?;
+        if count == 1 {
+            let _: () = conn
+                .expire(RedisKey::RateLimitSendCode(email.as_ref()), 300)
+                .await?;
+        }
 
         Ok(())
     }
