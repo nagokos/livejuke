@@ -55,7 +55,7 @@ impl VerificationCodeStore for RedisVerificationCodeStore {
             .await?;
         if count == 1 {
             let _: () = conn
-                .expire(RedisKey::RateLimitSendCode(email.as_ref()), 300)
+                .expire(RedisKey::AttemptVerify(email.as_ref()), 300)
                 .await?;
         }
 
