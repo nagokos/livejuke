@@ -4,244 +4,313 @@
  */
 
 export interface paths {
-    "/auth/email/send-code": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["send_code"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/email/verify-code": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["verify_code"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/google": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["auth_google"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+	"/auth/email/send-code": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["send_code"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/email/verify-code": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["verify_code"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/google": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["auth_google"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/refresh": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["auth_refresh"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        AuthGoogleInput: {
-            device_info: components["schemas"]["DeviceInfoInput"];
-            id_token: string;
-        };
-        AuthResponse: {
-            access_token: string;
-            refresh_token: string;
-            user: components["schemas"]["UserResponse"];
-        };
-        DeviceInfoInput: {
-            device_name?: string | null;
-            model_name?: string | null;
-            os: string;
-        };
-        /** @enum {string} */
-        ErrorCode: "INVALID_EMAIL" | "INVALID_DISPLAY_NAME" | "INVALID_VERIFICATION_CODE" | "RATE_LIMIT_EXCEEDED" | "SESSION_CREATION_FAILED" | "INTERNAL_ERROR" | "UNAUTHORIZED";
-        ErrorResponse: {
-            code: components["schemas"]["ErrorCode"];
-            message: string;
-        };
-        SendCodeInput: {
-            email: string;
-        };
-        UserResponse: {
-            display_name: string;
-            /** Format: int64 */
-            id: number;
-            role: string;
-        };
-        VerificationCodeResponse: {
-            /** Format: int32 */
-            resend_cooldown_seconds: number;
-        };
-        VerifyCodeInput: {
-            code: string;
-            device_info: components["schemas"]["DeviceInfoInput"];
-            email: string;
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+	schemas: {
+		AuthGoogleInput: {
+			device_info: components["schemas"]["DeviceInfoInput"];
+			id_token: string;
+		};
+		AuthRefreshInput: {
+			refresh_token: string;
+		};
+		AuthResponse: {
+			access_token: string;
+			refresh_token: string;
+			user: components["schemas"]["UserResponse"];
+		};
+		DeviceInfoInput: {
+			device_name?: string | null;
+			model_name?: string | null;
+			os: string;
+		};
+		/** @enum {string} */
+		ErrorCode:
+			| "INVALID_EMAIL"
+			| "INVALID_DISPLAY_NAME"
+			| "INVALID_VERIFICATION_CODE"
+			| "INVALID_ACCESS_TOKEN"
+			| "INVALID_REFRESH_TOKEN"
+			| "RATE_LIMIT_EXCEEDED"
+			| "SESSION_CREATION_FAILED"
+			| "INTERNAL_ERROR"
+			| "UNAUTHORIZED";
+		ErrorResponse: {
+			code: components["schemas"]["ErrorCode"];
+			message: string;
+		};
+		SendCodeInput: {
+			email: string;
+		};
+		UserResponse: {
+			display_name: string;
+			/** Format: int64 */
+			id: number;
+			role: string;
+		};
+		VerificationCodeResponse: {
+			/** Format: int32 */
+			resend_cooldown_seconds: number;
+		};
+		VerifyCodeInput: {
+			code: string;
+			device_info: components["schemas"]["DeviceInfoInput"];
+			email: string;
+		};
+	};
+	responses: never;
+	parameters: never;
+	requestBodies: never;
+	headers: never;
+	pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    send_code: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SendCodeInput"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VerificationCodeResponse"];
-                };
-            };
-            /** @description invalid email */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description too many request */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    verify_code: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VerifyCodeInput"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthResponse"];
-                };
-            };
-            /** @description invalid email */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description unauthorized error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    auth_google: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AuthGoogleInput"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthResponse"];
-                };
-            };
-            /** @description unauthorized error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
+	send_code: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SendCodeInput"];
+			};
+		};
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["VerificationCodeResponse"];
+				};
+			};
+			/** @description invalid email */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			/** @description too many request */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			/** @description internal server error */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	verify_code: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["VerifyCodeInput"];
+			};
+		};
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["AuthResponse"];
+				};
+			};
+			/** @description invalid email */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			/** @description unauthorized error */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			/** @description internal server error */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	auth_google: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["AuthGoogleInput"];
+			};
+		};
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["AuthResponse"];
+				};
+			};
+			/** @description unauthorized error */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			/** @description internal server error */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	auth_refresh: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["AuthRefreshInput"];
+			};
+		};
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["AuthResponse"];
+				};
+			};
+			/** @description unauthorized error */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			/** @description internal server error */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
 }

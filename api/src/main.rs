@@ -28,12 +28,12 @@ use crate::{
         },
         external::{
             google_token_verifier::GoogleTokenVerifier,
+            redis_verification_code_store::RedisVerificationCodeStore,
             smtp_email_sender::{SmtpConfig, SmtpEmailSender},
         },
         persistence::{
             pg_authentication_repository::PgAuthenticationRepository,
             pg_session_repository::PgSessionRepository, pg_user_repository::PgUserRepository,
-            redis_verification_code_store::RedisVerificationCodeStore,
         },
     },
     presentation::{
@@ -111,7 +111,11 @@ async fn main() -> anyhow::Result<()> {
             id_token_verifier: Arc::new(
                 GoogleTokenVerifier::new(config.google_client_id, reqwest::Client::new()).await?,
             ),
-            verification_code_store: Arc::new(RedisVerificationCodeStore::new(redis_conn.clone())),
+            verification_code_store: Arc::new(RedisVerificationCodeStore::new(
+                redis_conn.clone(),
+                config.max_attempts,
+                config.rate_limit,
+            )),
             email_sender: Arc::new(SmtpEmailSender::try_new(SmtpConfig {
                 host: config.smtp_host,
                 port: config.smtp_port,

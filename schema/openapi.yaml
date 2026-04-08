@@ -102,6 +102,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /auth/refresh:
+    post:
+      operationId: auth_refresh
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRefreshInput'
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "401":
+          description: unauthorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     AuthGoogleInput:
@@ -113,6 +141,13 @@ components:
         device_info:
           $ref: '#/components/schemas/DeviceInfoInput'
         id_token:
+          type: string
+    AuthRefreshInput:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
           type: string
     AuthResponse:
       type: object
@@ -148,6 +183,8 @@ components:
         - INVALID_EMAIL
         - INVALID_DISPLAY_NAME
         - INVALID_VERIFICATION_CODE
+        - INVALID_ACCESS_TOKEN
+        - INVALID_REFRESH_TOKEN
         - RATE_LIMIT_EXCEEDED
         - SESSION_CREATION_FAILED
         - INTERNAL_ERROR

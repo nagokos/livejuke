@@ -18,6 +18,12 @@ impl RefreshToken {
     }
 }
 
+impl From<String> for RefreshToken {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+
 impl std::fmt::Display for RefreshToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
@@ -60,6 +66,7 @@ pub struct VerificationData {
     pub code: String,
 }
 
+#[allow(clippy::new_without_default)]
 impl VerificationData {
     pub fn new() -> Self {
         let code = Alphanumeric.sample_string(&mut rand::rng(), 6);

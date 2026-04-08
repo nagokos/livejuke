@@ -11,3 +11,6 @@ CREATE TABLE refresh_tokens(
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+CREATE TRIGGER set_updated_at
+    BEFORE UPDATE ON refresh_tokens
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();

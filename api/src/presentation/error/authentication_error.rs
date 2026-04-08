@@ -22,6 +22,13 @@ impl IntoResponse for AuthenticationError {
                     message: self.to_string(),
                 },
             ),
+            Self::InvalidRefreshToken => (
+                StatusCode::UNAUTHORIZED,
+                ErrorResponse {
+                    code: ErrorCode::InvalidRefreshToken,
+                    message: self.to_string(),
+                },
+            ),
             Self::TooManyRequests => (
                 StatusCode::TOO_MANY_REQUESTS,
                 ErrorResponse {

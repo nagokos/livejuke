@@ -16,6 +16,8 @@ pub struct Config {
     pub smtp_password: String,
     pub smtp_from: String,
     pub smtp_tls: String,
+    pub max_attempts: u8,
+    pub rate_limit: u8,
 }
 
 impl Config {
@@ -38,6 +40,8 @@ impl Config {
             smtp_password: env::var("SMTP_PASSWORD")?,
             smtp_from: env::var("SMTP_FROM")?,
             smtp_tls: env::var("SMTP_TLS")?,
+            max_attempts: env::var("MAX_ATTEMPTS")?.parse()?,
+            rate_limit: env::var("RATE_LIMIT")?.parse()?,
         })
     }
 }

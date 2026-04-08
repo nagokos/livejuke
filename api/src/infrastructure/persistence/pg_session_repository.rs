@@ -9,6 +9,7 @@ use crate::domain::{
         model::{DeviceInfo, NewSession, Session},
         repository::SessionRepository,
     },
+    user::model::User,
 };
 
 pub struct PgSessionRepository {
@@ -25,9 +26,26 @@ impl PgSessionRepository {
 impl SessionRepository for PgSessionRepository {
     async fn create(&self, new_session: NewSession) -> Result<Session, anyhow::Error> {
         let sql = r#"
-            INSERT INTO refresh_tokens (user_id, token_hash, device_name, model_name, os, expires_at)
+            INSERT INTO refresh_tokens (
+                user_id,
+                token_hash,
+                device_name,
+                model_name,
+                os,
+                expires_at
+            )
             VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING *
+            RETURNING 
+                id, 
+                user_id, 
+                token_hash, 
+                device_name, 
+                model_name, 
+                os, 
+                is_revoked, 
+                expires_at, 
+                created_at, 
+                updated_at
         "#;
 
         let session = sqlx::query_as::<_, SessionRow>(sql)
@@ -42,6 +60,48 @@ impl SessionRepository for PgSessionRepository {
             .try_into()?;
 
         Ok(session)
+    }
+    async fn find_by_hash(&self, token_hash: &str) -> Result<Option<Session>, anyhow::Error> {
+        let sql = r#"
+            SELECT * FROM refresh_tokens WHERE token_hash = $1;
+        "#;
+
+        sqlx::query_as::<_, SessionRow>(sql)
+            .bind(token_hash)
+            .fetch_optional(&self.pool)
+            .await?
+            .map(Session::try_from)
+            .transpose()
+    }
+    async fn revoke(&self, token_hash: &str) -> Result<(), anyhow::Error> {
+        let sql = r#"
+            UPDATE refresh_tokens 
+            SET 
+                is_revoked = true
+            WHERE token_hash = $1
+        "#;
+
+        sqlx::query(sql)
+            .bind(token_hash)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+    async fn revoke_all_by_user_id(&self, user_id: Id<User>) -> Result<(), anyhow::Error> {
+        let sql = r#"
+            UPDATE refresh_tokens 
+            SET 
+                is_revoked = true
+            WHERE user_id = $1
+        "#;
+
+        sqlx::query(sql)
+            .bind(user_id.get())
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
     }
 }
 

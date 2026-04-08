@@ -11,11 +11,17 @@ use crate::{
 
 pub struct RedisVerificationCodeStore {
     conn: MultiplexedConnection,
+    max_attempts: u8,
+    rate_limit: u8,
 }
 
 impl RedisVerificationCodeStore {
-    pub fn new(conn: MultiplexedConnection) -> Self {
-        Self { conn }
+    pub fn new(conn: MultiplexedConnection, max_attempts: u8, rate_limit: u8) -> Self {
+        Self {
+            conn,
+            max_attempts,
+            rate_limit,
+        }
     }
 }
 

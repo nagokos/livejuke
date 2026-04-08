@@ -7,6 +7,8 @@ pub enum ErrorCode {
     InvalidEmail,
     InvalidDisplayName,
     InvalidVerificationCode,
+    InvalidAccessToken,
+    InvalidRefreshToken,
     RateLimitExceeded,
     SessionCreationFailed,
     InternalError,

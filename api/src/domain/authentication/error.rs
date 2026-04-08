@@ -6,6 +6,8 @@ pub enum AuthenticationError {
     Email(#[from] EmailError),
     #[error("invalid verification code")]
     InvalidVerificationCode,
+    #[error("invalid verification code")]
+    InvalidRefreshToken,
     #[error("authentication failed")]
     AuthenticationFailed,
     #[error("too many requests")]

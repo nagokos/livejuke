@@ -22,6 +22,11 @@ pub struct AuthGoogleInput {
 }
 
 #[derive(Deserialize, ToSchema)]
+pub struct AuthRefreshInput {
+    pub refresh_token: String,
+}
+
+#[derive(Deserialize, ToSchema)]
 pub struct DeviceInfoInput {
     pub device_name: Option<String>,
     pub model_name: Option<String>,
@@ -36,4 +41,9 @@ impl From<DeviceInfoInput> for DeviceInfo {
             os: value.os,
         }
     }
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct LogoutInput {
+    pub refresh_token: String,
 }

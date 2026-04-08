@@ -11,13 +11,13 @@ import { PortalHost } from "@rn-primitives/portal";
 import "../global.css";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
+GoogleSignin.configure({
+	webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+	iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+});
+
 export default function RootLayout() {
 	const colorScheme = useColorScheme();
-
-	GoogleSignin.configure({
-		webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-		iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-	});
 
 	return (
 		<ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>

@@ -1,8 +1,10 @@
 use crate::domain::authentication::email::Email;
 use crate::domain::authentication::error::AuthenticationError;
 use crate::presentation::error::ErrorResponse;
-use crate::presentation::request::auth::{AuthGoogleInput, SendCodeInput, VerifyCodeInput};
-use crate::presentation::response::verificatin_code_response::VerificationCodeResponse;
+use crate::presentation::request::auth::{
+    AuthGoogleInput, AuthRefreshInput, LogoutInput, SendCodeInput, VerifyCodeInput,
+};
+use crate::presentation::response::verification_code_response::VerificationCodeResponse;
 use crate::{
     AppState, application::error::AppError, presentation::response::auth_response::AuthResponse,
 };
@@ -85,9 +87,55 @@ async fn auth_google(
     Ok((StatusCode::OK, Json(result.into())))
 }
 
+#[utoipa::path(
+    post,
+    path = "/refresh",
+    request_body = AuthRefreshInput,
+    responses(
+        (status = 200, body = AuthResponse),
+        (status = 401, body = ErrorResponse, description = "unauthorized error"),
+        (status = 500, body = ErrorResponse, description = "internal server error"),
+    )
+)]
+async fn auth_refresh(
+    State(state): State<AppState>,
+    Json(input): Json<AuthRefreshInput>,
+) -> Result<(StatusCode, Json<AuthResponse>), AppError> {
+    let result = state
+        .auth_service
+        .auth_refresh(input.refresh_token.into())
+        .await?;
+
+    Ok((StatusCode::OK, Json(result.into())))
+}
+
+#[utoipa::path(
+    post,
+    path = "/logout",
+    request_body = AuthRefreshInput,
+    responses(
+        (status = 204),
+        (status = 401, body = ErrorResponse, description = "unauthorized error"),
+        (status = 500, body = ErrorResponse, description = "internal server error"),
+    )
+)]
+async fn logout(
+    State(state): State<AppState>,
+    Json(input): Json<LogoutInput>,
+) -> Result<StatusCode, AppError> {
+    state
+        .auth_service
+        .auth_refresh(input.refresh_token.into())
+        .await?;
+
+    Ok(StatusCode::OK)
+}
+
 pub fn create_auth_router() -> OpenApiRouter<AppState> {
     OpenApiRouter::new()
         .routes(routes!(send_code))
         .routes(routes!(verify_code))
         .routes(routes!(auth_google))
+        .routes(routes!(auth_refresh))
+        .routes(routes!(logout))
 }

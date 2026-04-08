@@ -207,6 +207,43 @@ impl AuthService {
             refresh_token,
         })
     }
+    pub async fn auth_refresh(&self, refresh_token: RefreshToken) -> Result<AuthResult, AppError> {
+        let hash = self.providers.refresh_token_provider.hash(&refresh_token);
+
+        let Some(token) = self.repos.session_repo.find_by_hash(&hash).await? else {
+            return Err(AuthenticationError::InvalidRefreshToken.into());
+        };
+
+        if token.is_revoked {
+            tracing::warn!("Revoked token was used! user_id: {}", token.user_id.get());
+            self.repos
+                .session_repo
+                .revoke_all_by_user_id(token.user_id)
+                .await?;
+            return Err(AuthenticationError::InvalidRefreshToken.into());
+        }
+
+        if token.expires_at < Utc::now() {
+            return Err(AuthenticationError::InvalidRefreshToken.into());
+        }
+
+        self.repos.session_repo.revoke(&token.token_hash).await?;
+
+        let user = self
+            .repos
+            .user_repo
+            .find_by_id(token.user_id)
+            .await?
+            .ok_or(AuthenticationError::InvalidRefreshToken)?;
+
+        let (access_token, refresh_token) = self.create_session(&user, token.device_info).await?;
+
+        Ok(AuthResult {
+            user,
+            access_token,
+            refresh_token,
+        })
+    }
     async fn create_session(
         &self,
         user: &User,
@@ -241,6 +278,11 @@ impl AuthService {
             })?;
 
         Ok((access_token, refresh_token))
+    }
+    pub async fn logout(&self, refresh_token: RefreshToken) -> Result<(), anyhow::Error> {
+        let hash = self.providers.refresh_token_provider.hash(&refresh_token);
+        self.repos.session_repo.revoke(&hash).await?;
+        Ok(())
     }
 }
 

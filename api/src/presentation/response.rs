@@ -1,2 +1,2 @@
 pub mod auth_response;
-pub mod verificatin_code_response;
+pub mod verification_code_response;
