@@ -264,7 +264,7 @@ impl AuthService {
             user.id,
             hashed,
             device_info,
-            Utc::now() + Duration::seconds(self.config.refresh_token_expiration as i64),
+            Utc::now() + Duration::seconds(self.config.refresh_token_exp_secs as i64),
         );
 
         self.repos
