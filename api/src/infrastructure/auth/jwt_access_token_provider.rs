@@ -15,14 +15,14 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    pub sub: i64,
+    pub sub: String,
     pub role: String,
-    pub iat: i64,
-    pub exp: i64,
+    pub iat: u64,
+    pub exp: u64,
 }
 
 impl Claims {
-    fn new(sub: i64, role: Role, iat: i64, exp: i64) -> Self {
+    fn new(sub: String, role: Role, iat: u64, exp: u64) -> Self {
         Self {
             sub,
             role: role.as_str().to_string(),
@@ -35,14 +35,14 @@ impl Claims {
 #[derive(Clone)]
 pub struct JwtAccessTokenProvider {
     jwt_secret: String,
-    jwt_expiration: i64,
+    jwt_exp: u64,
 }
 
 impl JwtAccessTokenProvider {
-    pub fn new(jwt_secret: String, jwt_expiration: i64) -> Self {
+    pub fn new(jwt_secret: String, jwt_exp: u64) -> Self {
         Self {
             jwt_secret,
-            jwt_expiration,
+            jwt_exp,
         }
     }
 }
@@ -51,8 +51,8 @@ impl AccessTokenProvider for JwtAccessTokenProvider {
     fn generate(&self, sub: Id<User>, role: Role) -> Result<AccessToken, anyhow::Error> {
         let header = Header::new(Algorithm::HS256);
 
-        let now = Utc::now().timestamp();
-        let claims = Claims::new(sub.get(), role, now, now + self.jwt_expiration);
+        let now = Utc::now().timestamp() as u64;
+        let claims = Claims::new(sub.get().to_string(), role, now, now + self.jwt_exp);
         let token = jsonwebtoken::encode(
             &header,
             &claims,
@@ -68,7 +68,7 @@ impl AccessTokenProvider for JwtAccessTokenProvider {
             &Validation::new(Algorithm::HS256),
         )?;
         Ok(CurrentUser {
-            id: Id::new(token_data.claims.sub),
+            id: Id::new(token_data.claims.sub.parse()?),
             role: token_data.claims.role.as_str().parse()?,
         })
     }

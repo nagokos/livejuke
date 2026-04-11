@@ -31,6 +31,10 @@ logs *services:
 psql:
   docker exec -it livejuke-postgres psql -U livejuke -d livejuke
 
+# redisに接続
+redis:
+	docker exec -it redis redis-cli
+
 # postgresの起動を待つ
 wait-db:
   until {{compose}} exec -T postgres pg_isready -U livejuke; do sleep 1; done

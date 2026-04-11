@@ -151,12 +151,12 @@ impl AuthService {
                 })?
         };
 
+        let (access_token, refresh_token) = self.create_session(&user, device_info).await?;
+
         self.providers
             .verification_code_store
             .delete(&email)
             .await?;
-
-        let (access_token, refresh_token) = self.create_session(&user, device_info).await?;
 
         Ok(AuthResult {
             user,
@@ -209,33 +209,33 @@ impl AuthService {
     pub async fn auth_refresh(&self, refresh_token: RefreshToken) -> Result<AuthResult, AppError> {
         let hash = self.providers.refresh_token_provider.hash(&refresh_token);
 
-        let Some(token) = self.repos.session_repo.find_by_hash(&hash).await? else {
+        let Some(session) = self.repos.session_repo.find_by_hash(&hash).await? else {
             return Err(SessionError::InvalidRefreshToken.into());
         };
 
-        if token.is_revoked {
-            tracing::warn!("Revoked token was used! user_id: {}", token.user_id.get());
+        if session.is_revoked {
+            tracing::warn!("Revoked token was used! user_id: {}", session.user_id.get());
             self.repos
                 .session_repo
-                .revoke_all_by_user_id(token.user_id)
+                .revoke_all_by_user_id(session.user_id)
                 .await?;
             return Err(SessionError::InvalidRefreshToken.into());
         }
 
-        if token.expires_at < Utc::now() {
+        if session.expires_at < Utc::now() {
             return Err(SessionError::InvalidRefreshToken.into());
         }
 
-        self.repos.session_repo.revoke(&token.token_hash).await?;
+        self.repos.session_repo.revoke(&session.token_hash).await?;
 
         let user = self
             .repos
             .user_repo
-            .find_by_id(token.user_id)
+            .find_by_id(session.user_id)
             .await?
             .ok_or(SessionError::InvalidRefreshToken)?;
 
-        let (access_token, refresh_token) = self.create_session(&user, token.device_info).await?;
+        let (access_token, refresh_token) = self.create_session(&user, session.device_info).await?;
 
         Ok(AuthResult {
             user,
@@ -264,7 +264,7 @@ impl AuthService {
             user.id,
             hashed,
             device_info,
-            Utc::now() + Duration::seconds(self.config.refresh_token_expiration),
+            Utc::now() + Duration::seconds(self.config.refresh_token_expiration as i64),
         );
 
         self.repos

@@ -30,7 +30,7 @@ export default function Mypage() {
 					</Text>
 				</Button>
 
-				<Link href="/register" asChild>
+				<Link href="/welcome" asChild>
 					<Button
 						variant={"outline"}
 						size={"lg"}
@@ -44,7 +44,7 @@ export default function Mypage() {
 
 				<Text className="text-sm text-gray-400 text-center mt-1">
 					アカウントをお持ちの方は{" "}
-					<Link href="/login" className="text-[#534AB7]">
+					<Link href="/welcome" className="text-[#534AB7]">
 						ログイン
 					</Link>
 				</Text>

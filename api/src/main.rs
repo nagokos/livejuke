@@ -96,7 +96,7 @@ async fn main() -> anyhow::Result<()> {
 
     let access_token_provider = Arc::new(JwtAccessTokenProvider::new(
         config.access_token_secret,
-        config.access_token_expiration,
+        config.access_token_exp_secs,
     ));
     let auth_service = {
         let auth_repositories = AuthRepositories {
@@ -112,8 +112,11 @@ async fn main() -> anyhow::Result<()> {
             ),
             verification_code_store: Arc::new(RedisVerificationCodeStore::new(
                 redis_conn.clone(),
+                config.verification_code_exp_secs,
                 config.max_attempts,
+                config.max_attempts_ttl_secs,
                 config.rate_limit,
+                config.rate_limit_ttl_secs,
             )),
             email_sender: Arc::new(SmtpEmailSender::try_new(SmtpConfig {
                 host: config.smtp_host,
@@ -124,7 +127,7 @@ async fn main() -> anyhow::Result<()> {
                 tls: config.smtp_tls,
             })?),
         };
-        let auth_config = AuthConfig::new(config.refresh_token_expiration);
+        let auth_config = AuthConfig::new(config.refresh_token_exp_secs);
 
         Arc::new(AuthService::new(
             auth_repositories,
@@ -136,7 +139,7 @@ async fn main() -> anyhow::Result<()> {
     let app_state = AppState {
         auth_service,
         access_token_provider,
-        resend_cooldown_seconds: config.resend_cooldown_seconds,
+        resend_cooldown_seconds: config.resend_cooldown_secs,
     };
 
     let (public_router, public_api) = OpenApiRouter::with_openapi(ApiDoc::openapi())

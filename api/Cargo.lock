@@ -55,6 +55,7 @@ dependencies = [
  "nutype",
  "rand 0.10.0",
  "redis",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",
