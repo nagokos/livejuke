@@ -53,10 +53,9 @@ impl RedisVerificationCodeStore {
             return count
             "#,
         );
-        let ttl_secs = ttl.as_secs() as i64;
         let count: i64 = script
             .key(key)
-            .arg(ttl_secs)
+            .arg(ttl.as_secs())
             .invoke_async(&mut conn)
             .await?;
 
