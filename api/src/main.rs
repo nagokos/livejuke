@@ -18,6 +18,7 @@ use crate::{
             service::{AuthProviders, AuthRepositories, AuthService},
         },
         traits::access_token_provider::AccessTokenProvider,
+        user::service::UserService,
     },
     config::Config,
     infrastructure::{
@@ -36,7 +37,10 @@ use crate::{
         },
     },
     presentation::{
-        error::ErrorResponse, error_code::ErrorCode, handlers::auth::create_auth_router,
+        error::ErrorResponse,
+        error_code::ErrorCode,
+        handlers::{auth::create_auth_router, user::create_user_router},
+        middleware::auth::auth_middleware,
     },
 };
 
@@ -54,6 +58,7 @@ struct ApiDoc;
 #[derive(Clone)]
 pub struct AppState {
     auth_service: Arc<AuthService>,
+    user_service: Arc<UserService>,
     access_token_provider: Arc<dyn AccessTokenProvider>,
     resend_cooldown_seconds: u8,
 }
@@ -94,6 +99,8 @@ async fn main() -> anyhow::Result<()> {
         redis_client.get_multiplexed_async_connection().await?
     };
 
+    let user_repo = Arc::new(PgUserRepository::new(pool.clone()));
+
     let access_token_provider = Arc::new(JwtAccessTokenProvider::new(
         config.access_token_secret,
         config.access_token_exp_secs,
@@ -101,7 +108,7 @@ async fn main() -> anyhow::Result<()> {
     let auth_service = {
         let auth_repositories = AuthRepositories {
             auth_repo: Arc::new(PgAuthenticationRepository::new(pool.clone())),
-            user_repo: Arc::new(PgUserRepository::new(pool.clone())),
+            user_repo: user_repo.clone(),
             session_repo: Arc::new(PgSessionRepository::new(pool.clone())),
         };
         let auth_providers = AuthProviders {
@@ -136,8 +143,13 @@ async fn main() -> anyhow::Result<()> {
         ))
     };
 
+    let user_service = Arc::new(UserService {
+        user_repo: user_repo,
+    });
+
     let app_state = AppState {
         auth_service,
+        user_service,
         access_token_provider,
         resend_cooldown_seconds: config.resend_cooldown_secs,
     };
@@ -146,8 +158,19 @@ async fn main() -> anyhow::Result<()> {
         .nest("/auth", create_auth_router())
         .split_for_parts();
 
+    let (private_router, private_api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
+        .nest("/me", create_user_router())
+        .layer(axum::middleware::from_fn_with_state(
+            app_state.clone(),
+            auth_middleware,
+        ))
+        .split_for_parts();
+
+    let openapi = public_api.merge_from(private_api);
+
     let router = public_router
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", public_api))
+        .merge(private_router)
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", openapi))
         .layer(GovernorLayer::new(governor_conf).error_handler(|_| {
             let error_response = ErrorResponse {
                 code: ErrorCode::RateLimitExceeded,
@@ -155,10 +178,6 @@ async fn main() -> anyhow::Result<()> {
             };
             (StatusCode::TOO_MANY_REQUESTS, Json(error_response)).into_response()
         }))
-        // .layer(axum::middleware::from_fn_with_state(
-        //     app_state.clone(),
-        //     auth_middleware,
-        // ))
         .with_state(app_state);
 
     let address = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 3000));

@@ -9,6 +9,7 @@ pub enum ErrorCode {
     InvalidVerificationCode,
     InvalidAccessToken,
     InvalidRefreshToken,
+    UserNotFound,
     RateLimitExceeded,
     SessionCreationFailed,
     InternalError,

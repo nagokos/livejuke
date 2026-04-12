@@ -41,7 +41,8 @@ impl Config {
             smtp_password: env::var("SMTP_PASSWORD")?,
             smtp_from: env::var("SMTP_FROM")?,
             smtp_tls: env::var("SMTP_TLS")?,
-            verification_code_exp_secs: env::var("VERIFICATION_CODE_EXP_SECS")?.parse()?,
+            verification_code_exp_secs: env::var("VERIFICATION_CODE_EXPIRATION_SECONDS")?
+                .parse()?,
             max_attempts: env::var("MAX_ATTEMPTS")?.parse()?,
             max_attempts_ttl_secs: env::var("MAX_ATTEMPTS_TTL_SECONDS")?.parse()?,
             rate_limit: env::var("RATE_LIMIT")?.parse()?,

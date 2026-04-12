@@ -1,3 +1,4 @@
 pub mod auth;
 pub mod error;
 pub mod traits;
+pub mod user;
