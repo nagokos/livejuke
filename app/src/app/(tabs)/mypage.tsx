@@ -1,53 +1,60 @@
-import { Image, View } from "react-native";
-import { Button } from "@/components/ui/button";
+import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { Link, Redirect } from "expo-router";
-import { useAuthStore } from "@/stores/auth";
+import {
+	ChevronRight,
+	IdCard,
+	MessageCircleQuestionMark,
+	UserRound,
+} from "lucide-react-native";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { router } from "expo-router";
 
 export default function Mypage() {
-	const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-	if (!isLoggedIn()) {
-		return <Redirect href="/welcome" />;
-	}
-
 	return (
 		<View className="flex-1 bg-white">
-			<View className="flex-1 items-center justify-center">
-				<Image
-					source={require("@/assets/images/livejuke-icon.png")}
-					className="w-28 h-28 rounded-3xl mb-6"
-				/>
-				<Text className="text-5xl font-bold text-gray-900 mb-3">LiveJuke</Text>
-				<Text className="text-lg text-gray-500 text-center leading-7">
-					ライブの感動を、{"\n"}みんなで共有しよう
-				</Text>
+			<View className="mt-10 mx-5">
+				<Pressable
+					className="flex-row items-center border-b border-gray-100 pt-2 pb-8"
+					onPress={() => router.push("/profile")}
+				>
+					<View className="w-10 items-center justify-center">
+						<Avatar className="size-12" alt="Zach Nugent's Avatar">
+							<AvatarImage
+								source={{ uri: "https://github.com/mrzachnugent.png" }}
+							/>
+							<AvatarFallback>
+								<Text>ZN</Text>
+							</AvatarFallback>
+						</Avatar>
+					</View>
+					<View className="flex-1 flex-row items-center ml-5">
+						<Text className="text-base font-bold flex-1">プロフィール</Text>
+						<ChevronRight color="#aaa" />
+					</View>
+				</Pressable>
 			</View>
-
-			<View className="px-7 pb-12 gap-3">
-				<Button size={"lg"} className="h-12 rounded-xl bg-[#534AB7]">
-					<Text className="text-white text-base font-semibold">
-						Googleで続ける
-					</Text>
-				</Button>
-
-				<Link href="/welcome" asChild>
-					<Button
-						variant={"outline"}
-						size={"lg"}
-						className="h-12 rounded-xl border-gray-300"
-					>
-						<Text className="text-gray-900 text-base font-semibold">
-							メールで登録
-						</Text>
-					</Button>
-				</Link>
-
-				<Text className="text-sm text-gray-400 text-center mt-1">
-					アカウントをお持ちの方は{" "}
-					<Link href="/welcome" className="text-[#534AB7]">
-						ログイン
-					</Link>
-				</Text>
+			<View className="mt-10 mx-5 gap-10">
+				<Pressable
+					className="flex-row items-center "
+					onPress={() => router.push("/account")}
+				>
+					<View className="w-10 items-center justify-center">
+						<UserRound />
+					</View>
+					<View className="flex-1 flex-row items-center ml-5">
+						<Text className="text-base font-bold flex-1">アカウント</Text>
+						<ChevronRight color="#aaa" />
+					</View>
+				</Pressable>
+				<View className="flex-row items-center ">
+					<View className="w-10 items-center justify-center">
+						<MessageCircleQuestionMark />
+					</View>
+					<View className="flex-1 flex-row items-center ml-5">
+						<Text className="text-base font-bold flex-1">問い合わせ</Text>
+						<ChevronRight color="#aaa" />
+					</View>
+				</View>
 			</View>
 		</View>
 	);

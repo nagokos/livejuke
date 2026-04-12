@@ -44,6 +44,13 @@
 				{
 					"iosUrlScheme": "com.googleusercontent.apps.679855323006-rs07su4dr5290dd08n2cu0da27ji90r3"
 				}
+			],
+			[
+				"expo-image-picker",
+				{
+					"photosPermission": "プロフィール画像を変更するために写真を使用します",
+					"cameraPermission": "プロフィール画像を撮影するためにカメラを使用します"
+				}
 			]
 		],
 		"experiments": {
