@@ -8,6 +8,13 @@ use crate::{
 impl IntoResponse for UserError {
     fn into_response(self) -> axum::response::Response {
         let (code, error) = match self {
+            Self::NotFound => (
+                StatusCode::NOT_FOUND,
+                ErrorResponse {
+                    code: ErrorCode::UserNotFound,
+                    message: self.to_string(),
+                },
+            ),
             Self::DisplayName(_) => (
                 StatusCode::BAD_REQUEST,
                 ErrorResponse {
