@@ -143,9 +143,7 @@ async fn main() -> anyhow::Result<()> {
         ))
     };
 
-    let user_service = Arc::new(UserService {
-        user_repo: user_repo,
-    });
+    let user_service = Arc::new(UserService { user_repo });
 
     let app_state = AppState {
         auth_service,

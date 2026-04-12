@@ -1,4 +1,4 @@
-use crate::{application::error::AppError, domain::user::display_name::DisplayNameError};
+use crate::domain::user::display_name::DisplayNameError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum UserError {
