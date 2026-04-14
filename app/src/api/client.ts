@@ -1,6 +1,4 @@
 import {
-	clearAccessToken,
-	clearRefreshToken,
 	getAccessToken,
 	getRefreshToken,
 	saveAccessToken,
@@ -54,9 +52,8 @@ const authMiddleware: Middleware = {
 			if (newToken) {
 				return await executeRetry(request, newToken);
 			}
-			await clearAccessToken();
-			await clearRefreshToken();
-			useAuthStore.getState().logout();
+			const logout = useAuthStore.getState().logout;
+			await logout();
 			router.replace("/welcome");
 			return response;
 		} finally {

@@ -38,7 +38,7 @@ const getDeviceInfo = () => ({
 	os: `${Platform.OS} ${Device.osVersion ?? ""}`.trim(),
 });
 
-export default function AuthScreen() {
+export default function Welcome() {
 	const [step, setStep] = useState<"email" | "code">("email");
 	const [code, setCode] = useState("");
 	const [cooldown, setCooldown] = useState(0);
@@ -149,8 +149,10 @@ export default function AuthScreen() {
 					setCodeError("認証コードが正しくありません");
 					break;
 				case "RATE_LIMIT_EXCEEDED":
-					setRootError("エラーが発生しました。時間をおいて再度お試しください");
+					setRootError("操作が多すぎます。時間をおいて再度お試しください");
 					break;
+				default:
+					setRootError("エラーが発生しました。時間をおいて再度お試しください");
 			}
 			return;
 		}
@@ -240,8 +242,7 @@ export default function AuthScreen() {
 					<View className="flex-1 h-px bg-gray-200" />
 				</View>
 
-				<View className="mt-8 gap-4">
-					{/* Email */}
+				<View className="mt-8 gap-5">
 					<Controller
 						name="email"
 						control={control}
@@ -305,7 +306,7 @@ export default function AuthScreen() {
 
 				<Button
 					onPress={handleSubmit(step === "email" ? onSendCode : onVerifyCode)}
-					className="mt-8 h-12 w-full rounded-xl bg-main active:opacity-80"
+					className="mt-10 h-12 w-full rounded-xl bg-main active:opacity-80"
 					disabled={isSubmitting || rateLimited}
 				>
 					<Text className="font-bold">
