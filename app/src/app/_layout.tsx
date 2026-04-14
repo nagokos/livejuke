@@ -22,7 +22,37 @@ export default function RootLayout() {
 	return (
 		<ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
 			<StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-			<Stack />
+
+			<Stack
+				screenOptions={{
+					headerBackButtonDisplayMode: "minimal",
+				}}
+			>
+				<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
+				<Stack.Screen name="(auth)" options={{ headerShown: false }} />
+
+				<Stack.Screen
+					name="profile"
+					options={{
+						title: "プロフィール",
+						headerBackTitle: "マイページ",
+					}}
+				/>
+				<Stack.Screen
+					name="account/index"
+					options={{
+						title: "アカウント",
+					}}
+				/>
+				<Stack.Screen
+					name="account/email"
+					options={{
+						title: "メールアドレス",
+					}}
+				/>
+			</Stack>
+
 			<PortalHost />
 		</ThemeProvider>
 	);

@@ -1,16 +1,17 @@
 import { Tabs } from "expo-router";
+import { UserRound } from "lucide-react-native";
 
 export default function TabLayout() {
 	return (
 		<Tabs
 			screenOptions={{
-				headerShown: false,
-				tabBarActiveTintColor: "#534AB7",
+				tabBarActiveTintColor: "black",
 			}}
 		>
 			<Tabs.Screen
 				name="index"
 				options={{
+					headerShown: false,
 					title: "ホーム",
 				}}
 			/>
@@ -24,6 +25,7 @@ export default function TabLayout() {
 				name="mypage"
 				options={{
 					title: "マイページ",
+					tabBarIcon: ({ color }) => <UserRound color={color} />,
 				}}
 			/>
 		</Tabs>
