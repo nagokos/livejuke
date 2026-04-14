@@ -25,7 +25,7 @@ impl AwsS3Store {
 impl ObjectStore for AwsS3Store {
     async fn get_presigned_uri(
         &self,
-        key: &str,
+        key: String,
         media_type: &str,
     ) -> Result<String, anyhow::Error> {
         let expires_in: std::time::Duration =
@@ -36,6 +36,7 @@ impl ObjectStore for AwsS3Store {
                     "Failed to convert expiration to PresigningConfig: {err:?}"
                 ))
             })?;
+
         let presigned_request = self
             .client
             .put_object()

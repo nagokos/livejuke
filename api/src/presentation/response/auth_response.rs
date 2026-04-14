@@ -13,10 +13,10 @@ pub struct AuthResponse {
     refresh_token: String,
 }
 
-impl From<AuthResult> for AuthResponse {
-    fn from(value: AuthResult) -> Self {
+impl AuthResponse {
+    pub fn from_domain(value: AuthResult, cdn_base_url: String) -> Self {
         Self {
-            user: value.user_auth_detail.into(),
+            user: UserAuthDetailResponse::from_domain(value.user_auth_detail, cdn_base_url),
             access_token: value.access_token.to_string(),
             refresh_token: value.refresh_token.to_string(),
         }
@@ -28,6 +28,7 @@ pub struct UserAuthDetailResponse {
     id: i64,
     display_name: String,
     email: String,
+    avatar_url: Option<String>,
     role: String,
     auth_status: AuthStatusResponse,
 }
@@ -38,13 +39,17 @@ pub struct AuthStatusResponse {
     is_email_linked: bool,
 }
 
-impl From<UserAuthDetail> for UserAuthDetailResponse {
-    fn from(value: UserAuthDetail) -> Self {
+impl UserAuthDetailResponse {
+    pub fn from_domain(value: UserAuthDetail, cdn_base_url: String) -> Self {
         Self {
             id: value.user.id.get(),
             display_name: value.user.display_name,
             email: value.user.email,
             role: value.user.role.as_str().to_string(),
+            avatar_url: value
+                .user
+                .avatar_key
+                .map(|avatar_key| format!("{}/avatars/{}", cdn_base_url, avatar_key)),
             auth_status: AuthStatusResponse {
                 is_google_linked: value.linked_providers.contains(&Provider::Google),
                 is_email_linked: value.linked_providers.contains(&Provider::Email),

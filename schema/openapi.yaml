@@ -6,6 +6,40 @@ info:
     name: ""
   version: 0.1.0
 paths:
+  /auth/email:
+    patch:
+      operationId: update_email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEmailInput'
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUserResponse'
+        "400":
+          description: invalid email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: unauthorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /auth/email/send-code:
     post:
       operationId: send_code
@@ -154,6 +188,117 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /me:
+    get:
+      operationId: get_me
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAuthDetailResponse'
+        "401":
+          description: unauthorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: update_me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateInput'
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUserResponse'
+        "400":
+          description: invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: unauthorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /me/avatar:
+    patch:
+      operationId: update_avatar
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUserResponse'
+        "401":
+          description: unauthorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /me/avatar/presigned_uri:
+    post:
+      operationId: presigned_uri
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAvatarUpdateInput'
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresignedUriResponse'
+        "400":
+          description: invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: unauthorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     AuthGoogleInput:
@@ -185,7 +330,38 @@ components:
         refresh_token:
           type: string
         user:
-          $ref: '#/components/schemas/UserResponse'
+          $ref: '#/components/schemas/UserAuthDetailResponse'
+    AuthStatusResponse:
+      type: object
+      required:
+        - is_google_linked
+        - is_email_linked
+      properties:
+        is_email_linked:
+          type: boolean
+        is_google_linked:
+          type: boolean
+    CurrentUserResponse:
+      type: object
+      required:
+        - id
+        - display_name
+        - email
+        - role
+      properties:
+        avatar_url:
+          type:
+            - string
+            - "null"
+        display_name:
+          type: string
+        email:
+          type: string
+        id:
+          type: integer
+          format: int64
+        role:
+          type: string
     DeviceInfoInput:
       type: object
       required:
@@ -209,8 +385,11 @@ components:
         - INVALID_VERIFICATION_CODE
         - INVALID_ACCESS_TOKEN
         - INVALID_REFRESH_TOKEN
+        - INVALID_MEDIA_TYPE
+        - USER_NOT_FOUND
         - RATE_LIMIT_EXCEEDED
         - SESSION_CREATION_FAILED
+        - NO_UPDATES_PROVIDED
         - INTERNAL_ERROR
         - UNAUTHORIZED
     ErrorResponse:
@@ -230,6 +409,13 @@ components:
       properties:
         refresh_token:
           type: string
+    PresignedUriResponse:
+      type: object
+      required:
+        - presigned_uri
+      properties:
+        presigned_uri:
+          type: string
     SendCodeInput:
       type: object
       required:
@@ -237,19 +423,49 @@ components:
       properties:
         email:
           type: string
-    UserResponse:
+    UpdateEmailInput:
+      type: object
+      required:
+        - code
+        - email
+      properties:
+        code:
+          type: string
+        email:
+          type: string
+    UserAuthDetailResponse:
       type: object
       required:
         - id
         - display_name
+        - email
         - role
+        - auth_status
       properties:
+        auth_status:
+          $ref: '#/components/schemas/AuthStatusResponse'
         display_name:
+          type: string
+        email:
           type: string
         id:
           type: integer
           format: int64
         role:
+          type: string
+    UserAvatarUpdateInput:
+      type: object
+      required:
+        - media_type
+      properties:
+        media_type:
+          type: string
+    UserUpdateInput:
+      type: object
+      required:
+        - display_name
+      properties:
+        display_name:
           type: string
     VerificationCodeResponse:
       type: object

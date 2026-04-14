@@ -15,6 +15,8 @@ import { useAuthStore } from "@/stores/auth";
 import { getRefreshToken } from "@/lib/auth-storage";
 
 export default function Account() {
+	const currentUser = useAuthStore((state) => state.currentUser);
+
 	const zustandLogout = useAuthStore((state) => state.logout);
 
 	const logout = async () => {
@@ -49,7 +51,7 @@ export default function Account() {
 					<View className="flex-1 ml-5">
 						<Text className="text-base font-bold">メールアドレス</Text>
 						<Text className="text-sm text-gray-500 mt-1">
-							kosuda0428@gmail.com
+							{currentUser?.email}
 						</Text>
 					</View>
 					<ChevronRight color="#aaa" />
