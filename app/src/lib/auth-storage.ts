@@ -26,3 +26,8 @@ export async function clearAccessToken() {
 export async function clearRefreshToken() {
 	await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
 }
+
+export async function clearAuth() {
+	await clearAccessToken();
+	await clearRefreshToken();
+}
