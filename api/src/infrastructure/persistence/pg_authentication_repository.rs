@@ -42,6 +42,7 @@ impl AuthRepository for PgAuthenticationRepository {
                 id,
                 display_name,
                 email,
+                avatar_key,
                 role,
                 created_at,
                 updated_at

@@ -4,7 +4,11 @@ use crate::{
     application::error::AppError,
     domain::{
         id::Id,
-        user::{error::UserError, model::User, repository::UserRepository},
+        user::{
+            error::UserError,
+            model::{UpdateUser, User},
+            repository::UserRepository,
+        },
     },
 };
 
@@ -17,6 +21,17 @@ impl UserService {
         let Some(user) = self.user_repo.find_by_id(user_id).await? else {
             return Err(UserError::NotFound.into());
         };
+        Ok(user)
+    }
+    pub async fn update_user(
+        &self,
+        user_id: Id<User>,
+        update_user: UpdateUser,
+    ) -> Result<User, AppError> {
+        if update_user.is_empty() {
+            return Err(UserError::EmptyUpdate.into());
+        }
+        let user = self.user_repo.update(user_id, update_user).await?;
         Ok(user)
     }
 }

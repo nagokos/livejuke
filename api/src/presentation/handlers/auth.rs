@@ -29,7 +29,7 @@ async fn send_code(
 ) -> Result<(StatusCode, Json<VerificationCodeResponse>), AppError> {
     state
         .auth_service
-        .send_verification_code(Email::try_new(input.email).map_err(AuthenticationError::Email)?)
+        .send_verification_code(Email::try_new(input.email).map_err(AuthenticationError::from)?)
         .await?;
 
     Ok((
@@ -56,7 +56,7 @@ async fn verify_code(
     let result = state
         .auth_service
         .verify_code(
-            Email::try_new(input.email).map_err(AuthenticationError::Email)?,
+            Email::try_new(input.email).map_err(AuthenticationError::from)?,
             input.code,
             input.device_info.into(),
         )

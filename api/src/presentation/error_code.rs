@@ -12,6 +12,7 @@ pub enum ErrorCode {
     UserNotFound,
     RateLimitExceeded,
     SessionCreationFailed,
+    NoUpdatesProvided,
     InternalError,
     Unauthorized,
 }
