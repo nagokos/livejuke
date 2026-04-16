@@ -44,6 +44,12 @@ impl From<DeviceInfoInput> for DeviceInfo {
 }
 
 #[derive(Deserialize, ToSchema)]
+pub struct UpdateEmailInput {
+    pub code: String,
+    pub email: String,
+}
+
+#[derive(Deserialize, ToSchema)]
 pub struct LogoutInput {
     pub refresh_token: String,
 }

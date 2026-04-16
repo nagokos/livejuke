@@ -39,7 +39,10 @@ use crate::{
     presentation::{
         error::ErrorResponse,
         error_code::ErrorCode,
-        handlers::{auth::create_auth_router, user::create_user_router},
+        handlers::{
+            auth::{create_private_auth_router, create_public_auth_router},
+            user::create_user_router,
+        },
         middleware::auth::auth_middleware,
     },
 };
@@ -153,11 +156,12 @@ async fn main() -> anyhow::Result<()> {
     };
 
     let (public_router, public_api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
-        .nest("/auth", create_auth_router())
+        .nest("/auth", create_public_auth_router())
         .split_for_parts();
 
     let (private_router, private_api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .nest("/me", create_user_router())
+        .nest("/auth", create_private_auth_router())
         .layer(axum::middleware::from_fn_with_state(
             app_state.clone(),
             auth_middleware,

@@ -19,16 +19,17 @@ use crate::{
         authentication::{
             email::Email,
             error::AuthenticationError,
-            model::{NewAuthentication, Provider},
+            model::{AuthenticationPayload, Provider},
             repository::AuthRepository,
         },
+        id::Id,
         session::{
             error::SessionError,
             model::{DeviceInfo, NewSession},
             repository::SessionRepository,
         },
         user::{
-            model::{NewUser, User},
+            model::{User, UserAuthDetail},
             repository::UserRepository,
         },
     },
@@ -129,29 +130,27 @@ impl AuthService {
             .find_by_provider_uid(Provider::Email, email.as_ref())
             .await?;
 
-        let user = if let Some(authentication) = authentication {
+        let user_auth_detail = if let Some(authentication) = authentication {
             self.repos
                 .user_repo
-                .find_by_id(authentication.user_id)
+                .find_user_with_auth_status(authentication.user_id)
                 .await?
-                .ok_or(AuthenticationError::AuthenticationFailed)?
         } else {
-            let new_user = NewUser::new(email.as_ref());
-            let new_authentication = NewAuthentication::new(Provider::Email, email.as_ref(), None);
-            self.repos
+            let payload = AuthenticationPayload::new(Provider::Email, email.as_ref());
+            let user = self
+                .repos
                 .auth_repo
-                .create_user_with_authentication(new_user, new_authentication)
-                .await
-                .map_err(|e| {
-                    tracing::error!(error = %e, "failed to create_user_with_authentication");
-                    match e.downcast() {
-                        Ok(auth_err) => AppError::Authentication(auth_err),
-                        Err(e) => AppError::Unexpected(e),
-                    }
-                })?
+                .create_user_with_authentication(payload)
+                .await?;
+            UserAuthDetail {
+                user,
+                linked_providers: vec![Provider::Email],
+            }
         };
 
-        let (access_token, refresh_token) = self.create_session(&user, device_info).await?;
+        let (access_token, refresh_token) = self
+            .create_session(&user_auth_detail.user, device_info)
+            .await?;
 
         self.providers
             .verification_code_store
@@ -159,7 +158,7 @@ impl AuthService {
             .await?;
 
         Ok(AuthResult {
-            user,
+            user_auth_detail,
             access_token,
             refresh_token,
         })
@@ -176,35 +175,71 @@ impl AuthService {
             .find_by_provider_uid(Provider::Google, &user_info.sub)
             .await?;
 
-        let user = if let Some(authentication) = authentication {
+        let user_auth_detail = if let Some(authentication) = authentication {
             self.repos
                 .user_repo
-                .find_by_id(authentication.user_id)
+                .find_user_with_auth_status(authentication.user_id)
                 .await?
-                .ok_or(AuthenticationError::AuthenticationFailed)?
         } else {
-            let new_user = NewUser::new(&user_info.email);
-            let new_authentication = NewAuthentication::new(Provider::Google, &user_info.sub, None);
-            self.repos
+            let payload = AuthenticationPayload::new(Provider::Google, &user_info.sub);
+            let user = self
+                .repos
                 .auth_repo
-                .create_user_with_authentication(new_user, new_authentication)
-                .await
-                .map_err(|e| {
-                    tracing::error!(error = %e, "failed to create_user_with_authentication");
-                    match e.downcast() {
-                        Ok(auth_err) => AppError::Authentication(auth_err),
-                        Err(e) => AppError::Unexpected(e),
-                    }
-                })?
+                .create_user_with_authentication(payload)
+                .await?;
+            UserAuthDetail {
+                user,
+                linked_providers: vec![Provider::Google],
+            }
         };
 
-        let (access_token, refresh_token) = self.create_session(&user, device_info).await?;
+        let (access_token, refresh_token) = self
+            .create_session(&user_auth_detail.user, device_info)
+            .await?;
 
         Ok(AuthResult {
-            user,
+            user_auth_detail,
             access_token,
             refresh_token,
         })
+    }
+    pub async fn upsert_email(
+        &self,
+        user_id: Id<User>,
+        email: Email,
+        code: String,
+    ) -> Result<User, anyhow::Error> {
+        let Some(data) = self.providers.verification_code_store.find(&email).await? else {
+            return Err(AuthenticationError::InvalidVerificationCode.into());
+        };
+
+        if data.code != code {
+            let count = self
+                .providers
+                .verification_code_store
+                .increment_attempts(&email)
+                .await?;
+            if self
+                .providers
+                .verification_code_store
+                .is_max_attempts(count)
+            {
+                self.providers
+                    .verification_code_store
+                    .delete(&email)
+                    .await?
+            }
+            return Err(AuthenticationError::InvalidVerificationCode.into());
+        }
+
+        let provider = AuthenticationPayload::new(Provider::Email, email.as_ref());
+        let user = self
+            .repos
+            .auth_repo
+            .update_user_with_authentication(user_id, provider)
+            .await?;
+
+        Ok(user)
     }
     pub async fn auth_refresh(&self, refresh_token: RefreshToken) -> Result<AuthResult, AppError> {
         let hash = self.providers.refresh_token_provider.hash(&refresh_token);
@@ -238,7 +273,10 @@ impl AuthService {
         let (access_token, refresh_token) = self.create_session(&user, session.device_info).await?;
 
         Ok(AuthResult {
-            user,
+            user_auth_detail: UserAuthDetail {
+                user,
+                linked_providers: vec![Provider::Google],
+            },
             access_token,
             refresh_token,
         })
@@ -306,8 +344,8 @@ impl AuthService {
 //     impl AuthRepository for MockAuthRepository {
 //         async fn create_user_with_authentication(
 //             &self,
-//             _new_user: NewUser,
-//             _new_authentication: NewAuthentication,
+//             _new_user: UserPayload,
+//             _new_authentication: AuthenticationPayload,
 //         ) -> Result<User, anyhow::Error> {
 //             if self.should_fail {
 //                 return Err(AuthenticationError::EmailAlreadyExists.into());
@@ -402,7 +440,7 @@ impl AuthService {
 //             MockTokenProvider,
 //         );
 //
-//         let new_user = NewUser {
+//         let new_user = UserPayload {
 //             display_name: DisplayName::try_new("test".to_string()).unwrap(),
 //         };
 //         let credentials = EmailCredentials {
@@ -437,7 +475,7 @@ impl AuthService {
 //             MockTokenProvider,
 //         );
 //
-//         let new_user = NewUser {
+//         let new_user = UserPayload {
 //             display_name: DisplayName::try_new("test".to_string()).unwrap(),
 //         };
 //         let credentials = EmailCredentials {

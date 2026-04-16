@@ -7,11 +7,12 @@ use crate::{
     application::{error::AppError, traits::types::CurrentUser},
     domain::{
         authentication::error::AuthenticationError,
-        user::{display_name::DisplayName, error::UserError, model::UpdateUser},
+        user::{display_name::DisplayName, error::UserError, model::UpdateUserPayload},
     },
     presentation::{
-        error::ErrorResponse, request::user::UserUpdateInput,
-        response::user_response::CurrentUserResponse,
+        error::ErrorResponse,
+        request::user::UserUpdateInput,
+        response::{auth_response::UserAuthDetailResponse, user_response::CurrentUserResponse},
     },
 };
 
@@ -19,7 +20,7 @@ use crate::{
     get,
     path = "/",
     responses(
-        (status = 200, body = CurrentUserResponse),
+        (status = 200, body = UserAuthDetailResponse),
         (status = 401, body = ErrorResponse, description = "unauthorized error"),
         (status = 500, body = ErrorResponse, description = "internal server error"),
     )
@@ -27,7 +28,7 @@ use crate::{
 async fn get_me(
     State(state): State<AppState>,
     Extension(current_user): Extension<CurrentUser>,
-) -> Result<(StatusCode, Json<CurrentUserResponse>), AppError> {
+) -> Result<(StatusCode, Json<UserAuthDetailResponse>), AppError> {
     let result = state
         .user_service
         .get_user(current_user.id)
@@ -55,7 +56,7 @@ async fn update_me(
     Extension(current_user): Extension<CurrentUser>,
     Json(input): Json<UserUpdateInput>,
 ) -> Result<(StatusCode, Json<CurrentUserResponse>), AppError> {
-    let update_user = UpdateUser::new()
+    let update_user = UpdateUserPayload::default()
         .display_name(DisplayName::try_new(input.display_name).map_err(UserError::from)?);
 
     let result = state

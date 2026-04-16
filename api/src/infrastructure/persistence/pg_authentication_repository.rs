@@ -5,11 +5,11 @@ use sqlx::{PgPool, prelude::FromRow};
 use crate::{
     domain::{
         authentication::{
-            model::{Authentication, NewAuthentication, Provider},
+            model::{Authentication, AuthenticationPayload, Provider},
             repository::AuthRepository,
         },
         id::Id,
-        user::model::{NewUser, User},
+        user::model::User,
     },
     infrastructure::persistence::pg_user_repository::UserRow,
 };
@@ -28,8 +28,7 @@ impl PgAuthenticationRepository {
 impl AuthRepository for PgAuthenticationRepository {
     async fn create_user_with_authentication(
         &self,
-        new_user: NewUser,
-        new_authentication: NewAuthentication,
+        authentication: AuthenticationPayload,
     ) -> Result<User, anyhow::Error> {
         let mut tx = self.pool.begin().await?;
 
@@ -48,7 +47,7 @@ impl AuthRepository for PgAuthenticationRepository {
                 updated_at
         "#;
         let user: User = sqlx::query_as::<_, UserRow>(sql)
-            .bind(new_user.email)
+            .bind(&authentication.uid)
             .fetch_one(&mut *tx)
             .await?
             .try_into()?;
@@ -57,16 +56,71 @@ impl AuthRepository for PgAuthenticationRepository {
             INSERT INTO authentications (
                 user_id, 
                 provider, 
-                uid, 
+                uid
             )
-            VALUES ($1, $2, $3, $4)
+            VALUES ($1, $2, $3)
         "#;
         sqlx::query(sql)
             .bind(user.id.get())
-            .bind(new_authentication.provider.as_str())
-            .bind(new_authentication.uid)
+            .bind(authentication.provider.as_str())
+            .bind(&authentication.uid)
             .execute(&mut *tx)
             .await?;
+
+        tx.commit().await?;
+
+        Ok(user)
+    }
+    async fn update_user_with_authentication(
+        &self,
+        user_id: Id<User>,
+        authentication: AuthenticationPayload,
+    ) -> Result<User, anyhow::Error> {
+        let mut tx = self.pool.begin().await?;
+
+        let sql = r#"
+            UPDATE users 
+            SET 
+                email = $1
+            WHERE
+                id = $2
+            RETURNING 
+                id,
+                display_name,
+                email,
+                avatar_key,
+                role,
+                created_at,
+                updated_at
+        "#;
+        let user: User = sqlx::query_as::<_, UserRow>(sql)
+            .bind(&authentication.uid)
+            .bind(user_id.get())
+            .fetch_one(&mut *tx)
+            .await?
+            .try_into()?;
+        println!("debug");
+
+        let sql = r#"
+            INSERT INTO authentications (
+                user_id, 
+                provider, 
+                uid 
+            )
+            VALUES ($1, $2, $3)
+            ON CONFLICT (user_id, provider)
+            DO UPDATE SET uid = EXCLUDED.uid;
+        "#;
+        let result = sqlx::query(sql)
+            .bind(user.id.get())
+            .bind(authentication.provider.as_str())
+            .bind(&authentication.uid)
+            .execute(&mut *tx)
+            .await;
+
+        if let Err(e) = result {
+            println!("{e}");
+        }
 
         tx.commit().await?;
 

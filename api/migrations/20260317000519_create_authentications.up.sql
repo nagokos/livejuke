@@ -5,7 +5,8 @@ CREATE TABLE authentications(
 	uid VARCHAR NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-	UNIQUE(provider, uid)
+	UNIQUE(provider, uid),
+	UNIQUE(user_id, provider)
 );
 CREATE TRIGGER set_updated_at
     BEFORE UPDATE ON authentications
