@@ -19,7 +19,7 @@ use crate::{
         authentication::{
             email::Email,
             error::AuthenticationError,
-            model::{AuthenticationProvider, Provider},
+            model::{NewAuthentication, Provider},
             repository::AuthRepository,
         },
         session::{
@@ -28,7 +28,7 @@ use crate::{
             repository::SessionRepository,
         },
         user::{
-            model::{User, UserProvider},
+            model::{NewUser, User},
             repository::UserRepository,
         },
     },
@@ -136,9 +136,8 @@ impl AuthService {
                 .await?
                 .ok_or(AuthenticationError::AuthenticationFailed)?
         } else {
-            let new_user = UserProvider::new(email.as_ref());
-            let new_authentication =
-                AuthenticationProvider::new(Provider::Email, email.as_ref(), None);
+            let new_user = NewUser::new(email.as_ref());
+            let new_authentication = NewAuthentication::new(Provider::Email, email.as_ref(), None);
             self.repos
                 .auth_repo
                 .create_user_with_authentication(new_user, new_authentication)
@@ -184,9 +183,8 @@ impl AuthService {
                 .await?
                 .ok_or(AuthenticationError::AuthenticationFailed)?
         } else {
-            let new_user = UserProvider::new(&user_info.email);
-            let new_authentication =
-                AuthenticationProvider::new(Provider::Google, &user_info.sub, None);
+            let new_user = NewUser::new(&user_info.email);
+            let new_authentication = NewAuthentication::new(Provider::Google, &user_info.sub, None);
             self.repos
                 .auth_repo
                 .create_user_with_authentication(new_user, new_authentication)
@@ -207,14 +205,6 @@ impl AuthService {
             access_token,
             refresh_token,
         })
-    }
-    pub async fn upsert_email(
-        &self,
-        email: Email,
-        code: String,
-        device_info: DeviceInfo,
-    ) -> Result<(), anyhow::Error> {
-        todo!()
     }
     pub async fn auth_refresh(&self, refresh_token: RefreshToken) -> Result<AuthResult, AppError> {
         let hash = self.providers.refresh_token_provider.hash(&refresh_token);
@@ -316,8 +306,8 @@ impl AuthService {
 //     impl AuthRepository for MockAuthRepository {
 //         async fn create_user_with_authentication(
 //             &self,
-//             _new_user: UserProvider,
-//             _new_authentication: AuthenticationProvider,
+//             _new_user: NewUser,
+//             _new_authentication: NewAuthentication,
 //         ) -> Result<User, anyhow::Error> {
 //             if self.should_fail {
 //                 return Err(AuthenticationError::EmailAlreadyExists.into());
@@ -388,6 +378,7 @@ impl AuthService {
 //             user_id: Id::new(1),
 //             provider: Provider::Email,
 //             uid: "test@example.com".to_string(),
+//             password_digest: "".to_string(),
 //             created_at: Utc::now(),
 //             updated_at: Utc::now(),
 //         }
@@ -412,7 +403,7 @@ impl AuthService {
 //             MockTokenProvider,
 //         );
 //
-//         let new_user = UserProvider {
+//         let new_user = NewUser {
 //             display_name: DisplayName::try_new("test".to_string()).unwrap(),
 //         };
 //         let credentials = EmailCredentials {
@@ -447,7 +438,7 @@ impl AuthService {
 //             MockTokenProvider,
 //         );
 //
-//         let new_user = UserProvider {
+//         let new_user = NewUser {
 //             display_name: DisplayName::try_new("test".to_string()).unwrap(),
 //         };
 //         let credentials = EmailCredentials {

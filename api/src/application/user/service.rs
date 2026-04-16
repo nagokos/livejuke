@@ -6,7 +6,7 @@ use crate::{
         id::Id,
         user::{
             error::UserError,
-            model::{UpdateUserProvider, User},
+            model::{UpdateUser, User},
             repository::UserRepository,
         },
     },
@@ -26,7 +26,7 @@ impl UserService {
     pub async fn update_user(
         &self,
         user_id: Id<User>,
-        update_user: UpdateUserProvider,
+        update_user: UpdateUser,
     ) -> Result<User, AppError> {
         if update_user.is_empty() {
             return Err(UserError::EmptyUpdate.into());
