@@ -28,7 +28,7 @@ use crate::{
             repository::SessionRepository,
         },
         user::{
-            model::{UserProvider, User},
+            model::{User, UserProvider},
             repository::UserRepository,
         },
     },
@@ -137,7 +137,8 @@ impl AuthService {
                 .ok_or(AuthenticationError::AuthenticationFailed)?
         } else {
             let new_user = UserProvider::new(email.as_ref());
-            let new_authentication = AuthenticationProvider::new(Provider::Email, email.as_ref(), None);
+            let new_authentication =
+                AuthenticationProvider::new(Provider::Email, email.as_ref(), None);
             self.repos
                 .auth_repo
                 .create_user_with_authentication(new_user, new_authentication)
@@ -184,7 +185,8 @@ impl AuthService {
                 .ok_or(AuthenticationError::AuthenticationFailed)?
         } else {
             let new_user = UserProvider::new(&user_info.email);
-            let new_authentication = AuthenticationProvider::new(Provider::Google, &user_info.sub, None);
+            let new_authentication =
+                AuthenticationProvider::new(Provider::Google, &user_info.sub, None);
             self.repos
                 .auth_repo
                 .create_user_with_authentication(new_user, new_authentication)
@@ -386,7 +388,6 @@ impl AuthService {
 //             user_id: Id::new(1),
 //             provider: Provider::Email,
 //             uid: "test@example.com".to_string(),
-//             password_digest: "".to_string(),
 //             created_at: Utc::now(),
 //             updated_at: Utc::now(),
 //         }
