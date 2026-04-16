@@ -43,11 +43,11 @@ impl FromStr for Role {
 }
 
 #[derive(Debug)]
-pub struct NewUser {
+pub struct UserProvider {
     pub email: String,
 }
 
-impl NewUser {
+impl UserProvider {
     pub fn new(email: &str) -> Self {
         Self {
             email: email.to_string(),
@@ -56,14 +56,14 @@ impl NewUser {
 }
 
 #[derive(Debug)]
-pub struct UpdateUser {
+pub struct UpdateUserProvider {
     pub display_name: Option<String>,
     pub email: Option<String>,
     pub avatar_key: Option<String>,
 }
 
 #[allow(clippy::new_without_default)]
-impl UpdateUser {
+impl UpdateUserProvider {
     pub fn new() -> Self {
         Self {
             display_name: None,

@@ -5,11 +5,11 @@ use sqlx::{PgPool, prelude::FromRow};
 use crate::{
     domain::{
         authentication::{
-            model::{Authentication, NewAuthentication, Provider},
+            model::{Authentication, AuthenticationProvider, Provider},
             repository::AuthRepository,
         },
         id::Id,
-        user::model::{NewUser, User},
+        user::model::{UpdateUserProvider, User, UserProvider},
     },
     infrastructure::persistence::pg_user_repository::UserRow,
 };
@@ -28,8 +28,8 @@ impl PgAuthenticationRepository {
 impl AuthRepository for PgAuthenticationRepository {
     async fn create_user_with_authentication(
         &self,
-        new_user: NewUser,
-        new_authentication: NewAuthentication,
+        new_user: UserProvider,
+        new_authentication: AuthenticationProvider,
     ) -> Result<User, anyhow::Error> {
         let mut tx = self.pool.begin().await?;
 
@@ -73,6 +73,31 @@ impl AuthRepository for PgAuthenticationRepository {
         tx.commit().await?;
 
         Ok(user)
+    }
+    async fn update_user_with_authentication(
+        &self,
+        update_user: UpdateUserProvider,
+        authentication: AuthenticationProvider,
+    ) -> Result<User, anyhow::Error> {
+        let mut tx = self.pool.begin().await?;
+
+        let sql = r#"
+            UPDATE users 
+            SET 
+                email = $1
+            WHERE
+                id = $2
+            RETURNING 
+                id,
+                display_name,
+                email,
+                avatar_key,
+                role,
+                created_at,
+                updated_at
+        "#;
+
+        sqlx::query_as!(sql).bind(&authentication.uid)
     }
     async fn find_by_provider_uid(
         &self,

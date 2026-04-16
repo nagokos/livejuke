@@ -16,13 +16,13 @@ pub struct Authentication {
 }
 
 #[derive(Debug)]
-pub struct NewAuthentication {
+pub struct AuthenticationProvider {
     pub provider: Provider,
     pub uid: String,
     pub password_digest: Option<String>,
 }
 
-impl NewAuthentication {
+impl AuthenticationProvider {
     pub fn new(provider: Provider, uid: &str, password_digest: Option<String>) -> Self {
         Self {
             provider,
