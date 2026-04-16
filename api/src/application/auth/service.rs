@@ -378,7 +378,6 @@ impl AuthService {
 //             user_id: Id::new(1),
 //             provider: Provider::Email,
 //             uid: "test@example.com".to_string(),
-//             password_digest: "".to_string(),
 //             created_at: Utc::now(),
 //             updated_at: Utc::now(),
 //         }

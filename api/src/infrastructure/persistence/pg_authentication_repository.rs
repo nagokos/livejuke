@@ -58,7 +58,6 @@ impl AuthRepository for PgAuthenticationRepository {
                 user_id, 
                 provider, 
                 uid, 
-                password_digest
             )
             VALUES ($1, $2, $3, $4)
         "#;
@@ -66,7 +65,6 @@ impl AuthRepository for PgAuthenticationRepository {
             .bind(user.id.get())
             .bind(new_authentication.provider.as_str())
             .bind(new_authentication.uid)
-            .bind(new_authentication.password_digest)
             .execute(&mut *tx)
             .await?;
 
@@ -98,7 +96,6 @@ pub struct AuthenticationRow {
     user_id: i64,
     provider: String,
     uid: String,
-    password_digest: Option<String>,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
 }
@@ -112,7 +109,6 @@ impl TryFrom<AuthenticationRow> for Authentication {
             user_id: Id::new(value.user_id),
             provider: value.provider.parse()?,
             uid: value.uid,
-            password_digest: value.password_digest,
             created_at: value.created_at,
             updated_at: value.updated_at,
         })
