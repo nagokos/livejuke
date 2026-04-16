@@ -10,21 +10,24 @@ pub struct Authentication {
     pub user_id: Id<User>,
     pub provider: Provider,
     pub uid: String,
+    pub password_digest: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Debug)]
-pub struct AuthenticationProvider {
+pub struct NewAuthentication {
     pub provider: Provider,
     pub uid: String,
+    pub password_digest: Option<String>,
 }
 
-impl AuthenticationProvider {
-    pub fn new(provider: Provider, uid: &str) -> Self {
+impl NewAuthentication {
+    pub fn new(provider: Provider, uid: &str, password_digest: Option<String>) -> Self {
         Self {
             provider,
             uid: uid.to_string(),
+            password_digest,
         }
     }
 }

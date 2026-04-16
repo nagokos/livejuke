@@ -66,33 +66,6 @@ async fn verify_code(
 }
 
 #[utoipa::path(
-    patch,
-    path = "/email",
-    request_body = VerifyCodeInput,
-    responses(
-        (status = 200, body = AuthResponse),
-        (status = 400, body = ErrorResponse, description = "invalid email"),
-        (status = 401, body = ErrorResponse, description = "unauthorized error"),
-        (status = 500, body = ErrorResponse, description = "internal server error"),
-    )
-)]
-async fn update_email(
-    State(state): State<AppState>,
-    Json(input): Json<VerifyCodeInput>,
-) -> Result<(StatusCode, Json<AuthResponse>), AppError> {
-    let result = state
-        .auth_service
-        .verify_code(
-            Email::try_new(input.email).map_err(AuthenticationError::from)?,
-            input.code,
-            input.device_info.into(),
-        )
-        .await?;
-
-    Ok((StatusCode::OK, Json(result.into())))
-}
-
-#[utoipa::path(
     post,
     path = "/google",
     request_body = AuthGoogleInput,

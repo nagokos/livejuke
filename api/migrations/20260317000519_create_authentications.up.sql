@@ -3,6 +3,7 @@ CREATE TABLE authentications(
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 	provider VARCHAR NOT NULL CHECK (provider IN ('email', 'google')), 
 	uid VARCHAR NOT NULL,
+	password_digest VARCHAR,
 	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 	UNIQUE(provider, uid)
