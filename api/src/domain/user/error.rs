@@ -4,6 +4,8 @@ use crate::domain::user::display_name::DisplayNameError;
 pub enum UserError {
     #[error(transparent)]
     DisplayName(#[from] DisplayNameError),
+    #[error("user update empty")]
+    EmptyUpdate,
     #[error("user not found")]
     NotFound,
 }

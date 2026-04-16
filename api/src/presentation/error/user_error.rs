@@ -15,6 +15,13 @@ impl IntoResponse for UserError {
                     message: self.to_string(),
                 },
             ),
+            Self::EmptyUpdate => (
+                StatusCode::BAD_REQUEST,
+                ErrorResponse {
+                    code: ErrorCode::NoUpdatesProvided,
+                    message: self.to_string(),
+                },
+            ),
             Self::DisplayName(_) => (
                 StatusCode::BAD_REQUEST,
                 ErrorResponse {

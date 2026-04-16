@@ -4,7 +4,10 @@ use sqlx::{PgPool, prelude::FromRow};
 
 use crate::domain::{
     id::Id,
-    user::{model::User, repository::UserRepository},
+    user::{
+        model::{UpdateUser, User},
+        repository::UserRepository,
+    },
 };
 
 pub struct PgUserRepository {
@@ -30,6 +33,32 @@ impl UserRepository for PgUserRepository {
             .map(User::try_from)
             .transpose()
     }
+    async fn update(
+        &self,
+        user_id: Id<User>,
+        update_user: UpdateUser,
+    ) -> Result<User, anyhow::Error> {
+        let mut query_builder = sqlx::QueryBuilder::new("UPDATE users SET ");
+        let mut separeted = query_builder.separated(", ");
+
+        if let Some(display_name) = update_user.display_name {
+            separeted.push("display_name = ");
+            query_builder.push_bind(display_name);
+        };
+
+        query_builder.push(" WHERE id = ");
+        query_builder.push_bind(user_id.get());
+        query_builder
+            .push(" RETURNING id, display_name, email, avatar_key, role, created_at, updated_at");
+
+        let user = query_builder
+            .build_query_as::<UserRow>()
+            .fetch_one(&self.pool)
+            .await?
+            .try_into()?;
+
+        Ok(user)
+    }
 }
 
 #[derive(Debug, FromRow)]
@@ -37,7 +66,7 @@ pub struct UserRow {
     id: i64,
     display_name: String,
     email: String,
-    avatar_key: String,
+    avatar_key: Option<String>,
     role: String,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
