@@ -5,11 +5,11 @@ use sqlx::{PgPool, prelude::FromRow};
 use crate::{
     domain::{
         authentication::{
-            model::{Authentication, NewAuthentication, Provider},
+            model::{Authentication, AuthenticationProvider, Provider},
             repository::AuthRepository,
         },
         id::Id,
-        user::model::{NewUser, User},
+        user::model::{UpdateUserProvider, User, UserProvider},
     },
     infrastructure::persistence::pg_user_repository::UserRow,
 };
@@ -28,8 +28,8 @@ impl PgAuthenticationRepository {
 impl AuthRepository for PgAuthenticationRepository {
     async fn create_user_with_authentication(
         &self,
-        new_user: NewUser,
-        new_authentication: NewAuthentication,
+        new_user: UserProvider,
+        new_authentication: AuthenticationProvider,
     ) -> Result<User, anyhow::Error> {
         let mut tx = self.pool.begin().await?;
 
@@ -58,7 +58,6 @@ impl AuthRepository for PgAuthenticationRepository {
                 user_id, 
                 provider, 
                 uid, 
-                password_digest
             )
             VALUES ($1, $2, $3, $4)
         "#;
@@ -66,13 +65,37 @@ impl AuthRepository for PgAuthenticationRepository {
             .bind(user.id.get())
             .bind(new_authentication.provider.as_str())
             .bind(new_authentication.uid)
-            .bind(new_authentication.password_digest)
             .execute(&mut *tx)
             .await?;
 
         tx.commit().await?;
 
         Ok(user)
+    }
+    async fn update_user_with_authentication(
+        &self,
+        update_user: UpdateUserProvider,
+        authentication: AuthenticationProvider,
+    ) -> Result<User, anyhow::Error> {
+        let mut tx = self.pool.begin().await?;
+
+        let sql = r#"
+            UPDATE users 
+            SET 
+                email = $1
+            WHERE
+                id = $2
+            RETURNING 
+                id,
+                display_name,
+                email,
+                avatar_key,
+                role,
+                created_at,
+                updated_at
+        "#;
+
+        sqlx::query_as!(sql).bind(&authentication.uid)
     }
     async fn find_by_provider_uid(
         &self,
@@ -98,7 +121,6 @@ pub struct AuthenticationRow {
     user_id: i64,
     provider: String,
     uid: String,
-    password_digest: Option<String>,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
 }
@@ -112,9 +134,7 @@ impl TryFrom<AuthenticationRow> for Authentication {
             user_id: Id::new(value.user_id),
             provider: value.provider.parse()?,
             uid: value.uid,
-            password_digest: value.password_digest,
             created_at: value.created_at,
             updated_at: value.updated_at,
         })
     }
-}

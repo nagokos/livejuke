@@ -7,7 +7,7 @@ use crate::{
     application::{error::AppError, traits::types::CurrentUser},
     domain::{
         authentication::error::AuthenticationError,
-        user::{display_name::DisplayName, error::UserError, model::UpdateUser},
+        user::{display_name::DisplayName, error::UserError, model::UpdateUserProvider},
     },
     presentation::{
         error::ErrorResponse, request::user::UserUpdateInput,
@@ -55,7 +55,7 @@ async fn update_me(
     Extension(current_user): Extension<CurrentUser>,
     Json(input): Json<UserUpdateInput>,
 ) -> Result<(StatusCode, Json<CurrentUserResponse>), AppError> {
-    let update_user = UpdateUser::new()
+    let update_user = UpdateUserProvider::new()
         .display_name(DisplayName::try_new(input.display_name).map_err(UserError::from)?);
 
     let result = state

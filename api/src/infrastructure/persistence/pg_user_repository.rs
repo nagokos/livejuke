@@ -5,7 +5,7 @@ use sqlx::{PgPool, prelude::FromRow};
 use crate::domain::{
     id::Id,
     user::{
-        model::{UpdateUser, User},
+        model::{UpdateUserProvider, User},
         repository::UserRepository,
     },
 };
@@ -36,7 +36,7 @@ impl UserRepository for PgUserRepository {
     async fn update(
         &self,
         user_id: Id<User>,
-        update_user: UpdateUser,
+        update_user: UpdateUserProvider,
     ) -> Result<User, anyhow::Error> {
         let mut query_builder = sqlx::QueryBuilder::new("UPDATE users SET ");
         let mut separeted = query_builder.separated(", ");

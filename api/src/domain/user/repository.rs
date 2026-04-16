@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use crate::domain::{
     id::Id,
-    user::model::{UpdateUser, User},
+    user::model::{UpdateUserProvider, User},
 };
 
 #[async_trait]
@@ -11,6 +11,6 @@ pub trait UserRepository: Send + Sync {
     async fn update(
         &self,
         user_id: Id<User>,
-        update_user: UpdateUser,
+        update_user: UpdateUserProvider,
     ) -> Result<User, anyhow::Error>;
 }
