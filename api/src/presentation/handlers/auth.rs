@@ -94,7 +94,10 @@ async fn update_email(
         )
         .await?;
 
-    Ok((StatusCode::OK, Json(result.into())))
+    Ok((
+        StatusCode::OK,
+        Json(CurrentUserResponse::from_domain(result, state.cdn_base_url)),
+    ))
 }
 
 #[utoipa::path(

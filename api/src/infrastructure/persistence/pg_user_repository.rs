@@ -69,10 +69,16 @@ impl UserRepository for PgUserRepository {
         let mut query_builder = sqlx::QueryBuilder::new("UPDATE users SET ");
         let mut separeted = query_builder.separated(", ");
 
+        {}
         if let Some(display_name) = update_user.display_name {
             separeted.push("display_name = ");
-            query_builder.push_bind(display_name);
+            separeted.push_bind_unseparated(display_name);
         };
+
+        if let Some(avatar_key) = update_user.avatar_key {
+            separeted.push("avatar_key = ");
+            separeted.push_bind_unseparated(avatar_key);
+        }
 
         query_builder.push(" WHERE id = ");
         query_builder.push_bind(user_id.get());

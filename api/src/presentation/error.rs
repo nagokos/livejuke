@@ -24,11 +24,19 @@ impl IntoResponse for AppError {
             Self::User(e) => e.into_response(),
             Self::Authentication(e) => e.into_response(),
             Self::Session(e) => e.into_response(),
-            Self::Unexpected(_) => (
+            Self::MediaType(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    code: ErrorCode::InvalidMediaType,
+                    message: e.to_string(),
+                }),
+            )
+                .into_response(),
+            Self::Unexpected(e) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
                     code: ErrorCode::InternalError,
-                    message: "internal server error".to_string(),
+                    message: e.to_string(),
                 }),
             )
                 .into_response(),
