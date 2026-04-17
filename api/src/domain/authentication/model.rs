@@ -14,13 +14,13 @@ pub struct Authentication {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug)]
-pub struct NewAuthentication {
+#[derive(Debug, Clone)]
+pub struct AuthenticationPayload {
     pub provider: Provider,
     pub uid: String,
 }
 
-impl NewAuthentication {
+impl AuthenticationPayload {
     pub fn new(provider: Provider, uid: &str) -> Self {
         Self {
             provider,
@@ -29,7 +29,7 @@ impl NewAuthentication {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Provider {
     Email,
     Google,

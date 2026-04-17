@@ -6,8 +6,8 @@ use crate::domain::user::model::User;
 #[derive(Serialize, ToSchema)]
 pub struct CurrentUserResponse {
     id: i64,
-    email: String,
     display_name: String,
+    email: String,
     role: String,
 }
 

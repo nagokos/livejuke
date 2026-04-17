@@ -1,13 +1,17 @@
+use crate::application::traits::types::CurrentUser;
 use crate::domain::authentication::email::Email;
 use crate::domain::authentication::error::AuthenticationError;
 use crate::presentation::error::ErrorResponse;
 use crate::presentation::request::auth::{
-    AuthGoogleInput, AuthRefreshInput, LogoutInput, SendCodeInput, VerifyCodeInput,
+    AuthGoogleInput, AuthRefreshInput, LogoutInput, SendCodeInput, UpdateEmailInput,
+    VerifyCodeInput,
 };
+use crate::presentation::response::user_response::CurrentUserResponse;
 use crate::presentation::response::verification_code_response::VerificationCodeResponse;
 use crate::{
     AppState, application::error::AppError, presentation::response::auth_response::AuthResponse,
 };
+use axum::Extension;
 use axum::{Json, extract::State, http::StatusCode};
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_axum::routes;
@@ -59,6 +63,34 @@ async fn verify_code(
             Email::try_new(input.email).map_err(AuthenticationError::from)?,
             input.code,
             input.device_info.into(),
+        )
+        .await?;
+
+    Ok((StatusCode::OK, Json(result.into())))
+}
+
+#[utoipa::path(
+    patch,
+    path = "/email",
+    request_body = UpdateEmailInput,
+    responses(
+        (status = 200, body = CurrentUserResponse),
+        (status = 400, body = ErrorResponse, description = "invalid email"),
+        (status = 401, body = ErrorResponse, description = "unauthorized error"),
+        (status = 500, body = ErrorResponse, description = "internal server error"),
+    )
+)]
+async fn update_email(
+    State(state): State<AppState>,
+    Extension(current_user): Extension<CurrentUser>,
+    Json(input): Json<UpdateEmailInput>,
+) -> Result<(StatusCode, Json<CurrentUserResponse>), AppError> {
+    let result = state
+        .auth_service
+        .upsert_email(
+            current_user.id,
+            Email::try_new(input.email).map_err(AuthenticationError::from)?,
+            input.code,
         )
         .await?;
 
@@ -131,11 +163,15 @@ async fn logout(
     Ok(StatusCode::NO_CONTENT)
 }
 
-pub fn create_auth_router() -> OpenApiRouter<AppState> {
+pub fn create_public_auth_router() -> OpenApiRouter<AppState> {
     OpenApiRouter::new()
         .routes(routes!(send_code))
         .routes(routes!(verify_code))
         .routes(routes!(auth_google))
         .routes(routes!(auth_refresh))
         .routes(routes!(logout))
+}
+
+pub fn create_private_auth_router() -> OpenApiRouter<AppState> {
+    OpenApiRouter::new().routes(routes!(update_email))
 }

@@ -2,7 +2,11 @@ use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
 
-use crate::domain::{authentication::email::Email, id::Id, user::display_name::DisplayName};
+use crate::domain::{
+    authentication::{email::Email, model::Provider},
+    id::Id,
+    user::display_name::DisplayName,
+};
 
 #[derive(Debug, Clone)]
 pub struct User {
@@ -42,35 +46,20 @@ impl FromStr for Role {
     }
 }
 
-#[derive(Debug)]
-pub struct NewUser {
-    pub email: String,
+#[derive(Debug, Clone)]
+pub struct UserAuthDetail {
+    pub user: User,
+    pub linked_providers: Vec<Provider>,
 }
 
-impl NewUser {
-    pub fn new(email: &str) -> Self {
-        Self {
-            email: email.to_string(),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct UpdateUser {
+#[derive(Debug, Default)]
+pub struct UpdateUserPayload {
     pub display_name: Option<String>,
     pub email: Option<String>,
     pub avatar_key: Option<String>,
 }
 
-#[allow(clippy::new_without_default)]
-impl UpdateUser {
-    pub fn new() -> Self {
-        Self {
-            display_name: None,
-            email: None,
-            avatar_key: None,
-        }
-    }
+impl UpdateUserPayload {
     pub fn is_empty(&self) -> bool {
         self.display_name.is_none() && self.email.is_none() && self.avatar_key.is_none()
     }

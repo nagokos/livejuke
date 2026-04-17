@@ -6,7 +6,7 @@ use crate::{
         id::Id,
         user::{
             error::UserError,
-            model::{UpdateUser, User},
+            model::{UpdateUserPayload, User, UserAuthDetail},
             repository::UserRepository,
         },
     },
@@ -17,16 +17,14 @@ pub struct UserService {
 }
 
 impl UserService {
-    pub async fn get_user(&self, user_id: Id<User>) -> Result<User, AppError> {
-        let Some(user) = self.user_repo.find_by_id(user_id).await? else {
-            return Err(UserError::NotFound.into());
-        };
+    pub async fn get_user(&self, user_id: Id<User>) -> Result<UserAuthDetail, AppError> {
+        let user = self.user_repo.find_user_with_auth_status(user_id).await?;
         Ok(user)
     }
     pub async fn update_user(
         &self,
         user_id: Id<User>,
-        update_user: UpdateUser,
+        update_user: UpdateUserPayload,
     ) -> Result<User, AppError> {
         if update_user.is_empty() {
             return Err(UserError::EmptyUpdate.into());

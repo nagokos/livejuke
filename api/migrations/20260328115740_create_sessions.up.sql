@@ -10,6 +10,7 @@ CREATE TABLE sessions(
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
 CREATE INDEX idx_sessions_user_id ON sessions(user_id);
 CREATE TRIGGER set_updated_at
     BEFORE UPDATE ON sessions
