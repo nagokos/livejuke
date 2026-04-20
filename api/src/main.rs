@@ -27,7 +27,9 @@ use crate::{
             opaque_refresh_token_provider::OpaqueRefreshTokenProvider,
         },
         external::{
+            aws_s3_store::AwsS3Store,
             google_token_verifier::GoogleTokenVerifier,
+            redis_upload_session_store::RedisUploadSessionStore,
             redis_verification_code_store::RedisVerificationCodeStore,
             smtp_email_sender::{SmtpConfig, SmtpEmailSender},
         },
@@ -64,6 +66,7 @@ pub struct AppState {
     user_service: Arc<UserService>,
     access_token_provider: Arc<dyn AccessTokenProvider>,
     resend_cooldown_seconds: u8,
+    cdn_base_url: String,
 }
 
 #[tokio::main]
@@ -146,13 +149,20 @@ async fn main() -> anyhow::Result<()> {
         ))
     };
 
-    let user_service = Arc::new(UserService { user_repo });
+    let user_service = {
+        Arc::new(UserService {
+            user_repo,
+            object_store: Arc::new(AwsS3Store::new(config.aws_s3_bucket_name).await),
+            upload_session_store: Arc::new(RedisUploadSessionStore::new(redis_conn.clone())),
+        })
+    };
 
     let app_state = AppState {
         auth_service,
         user_service,
         access_token_provider,
         resend_cooldown_seconds: config.resend_cooldown_secs,
+        cdn_base_url: config.cdn_base_url,
     };
 
     let (public_router, public_api) = OpenApiRouter::with_openapi(ApiDoc::openapi())

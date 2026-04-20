@@ -99,7 +99,6 @@ impl AuthRepository for PgAuthenticationRepository {
             .fetch_one(&mut *tx)
             .await?
             .try_into()?;
-        println!("debug");
 
         let sql = r#"
             INSERT INTO authentications (
@@ -111,16 +110,12 @@ impl AuthRepository for PgAuthenticationRepository {
             ON CONFLICT (user_id, provider)
             DO UPDATE SET uid = EXCLUDED.uid;
         "#;
-        let result = sqlx::query(sql)
+        sqlx::query(sql)
             .bind(user.id.get())
             .bind(authentication.provider.as_str())
             .bind(&authentication.uid)
             .execute(&mut *tx)
-            .await;
-
-        if let Err(e) = result {
-            println!("{e}");
-        }
+            .await?;
 
         tx.commit().await?;
 

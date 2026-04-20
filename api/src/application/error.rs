@@ -1,6 +1,6 @@
 use crate::domain::{
     authentication::error::AuthenticationError, session::error::SessionError,
-    user::error::UserError,
+    shared::media_type::MediaTypeError, user::error::UserError,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -11,6 +11,8 @@ pub enum AppError {
     Authentication(#[from] AuthenticationError),
     #[error(transparent)]
     Session(#[from] SessionError),
+    #[error(transparent)]
+    MediaType(#[from] MediaTypeError),
     #[error(transparent)]
     Unexpected(#[from] anyhow::Error),
 }

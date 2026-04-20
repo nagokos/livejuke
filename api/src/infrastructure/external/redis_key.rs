@@ -4,6 +4,7 @@ pub enum RedisKey<'a> {
     Verification(&'a str),
     RateLimitSendCode(&'a str),
     AttemptVerify(&'a str),
+    UploadSession(&'a str),
 }
 
 impl ToSingleRedisArg for RedisKey<'_> {}
@@ -17,6 +18,7 @@ impl ToRedisArgs for RedisKey<'_> {
             Self::Verification(email) => format!("verification:{}", email),
             Self::RateLimitSendCode(email) => format!("rate:send-code:{}", email),
             Self::AttemptVerify(email) => format!("attempt:verify:{}", email),
+            Self::UploadSession(user_id) => format!("pending:upload:{}", user_id),
         };
         key.write_redis_args(out);
     }

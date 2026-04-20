@@ -20,6 +20,8 @@ pub struct Config {
     pub max_attempts_ttl_secs: u64,
     pub rate_limit: i64,
     pub rate_limit_ttl_secs: u64,
+    pub aws_s3_bucket_name: String,
+    pub cdn_base_url: String,
 }
 
 impl Config {
@@ -47,6 +49,8 @@ impl Config {
             max_attempts_ttl_secs: env::var("MAX_ATTEMPTS_TTL_SECONDS")?.parse()?,
             rate_limit: env::var("RATE_LIMIT")?.parse()?,
             rate_limit_ttl_secs: env::var("RATE_LIMIT_TTL_SECONDS")?.parse()?,
+            aws_s3_bucket_name: env::var("AWS_S3_BUCKET_NAME")?,
+            cdn_base_url: env::var("CDN_BASE_URL")?,
         })
     }
 }

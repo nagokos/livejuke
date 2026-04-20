@@ -50,6 +50,8 @@
       {
         devShells.default = pkgs.mkShell {
           packages = common ++ apiPkgs;
+          AWS_PROFILE = "livejuke-dev";
+          AWS_REGION = "ap-northeast-1";
         };
         devShells.app = pkgs.mkShell {
           packages = common ++ appPkgs;
