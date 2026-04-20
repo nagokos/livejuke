@@ -2,9 +2,7 @@ use async_trait::async_trait;
 use aws_config::{Region, meta::region::RegionProviderChain};
 use aws_sdk_s3::{Client, presigning::PresigningConfig};
 
-use crate::{
-    application::traits::object_store::ObjectStore, domain::shared::media_type::MediaType,
-};
+use crate::application::traits::object_store::ObjectStore;
 
 const PRESIGNED_URL_EXPIRES_SECS: u64 = 300;
 
@@ -28,7 +26,7 @@ impl ObjectStore for AwsS3Store {
     async fn get_presigned_uri(
         &self,
         key: &str,
-        media_type: MediaType,
+        media_type: &str,
     ) -> Result<String, anyhow::Error> {
         let expires_in: std::time::Duration =
             std::time::Duration::from_secs(PRESIGNED_URL_EXPIRES_SECS);
@@ -42,7 +40,7 @@ impl ObjectStore for AwsS3Store {
             .client
             .put_object()
             .bucket(&self.bucket)
-            .content_type(media_type.as_ref())
+            .content_type(media_type)
             .key(key)
             .presigned(expires_in)
             .await?;

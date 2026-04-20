@@ -49,7 +49,7 @@ impl UserService {
 
         let presigned_uri = self
             .object_store
-            .get_presigned_uri(&key, media_type)
+            .get_presigned_uri(&key, media_type.as_ref())
             .await?;
 
         self.upload_session_store
