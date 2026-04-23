@@ -151,6 +151,11 @@ export default function Welcome() {
 				case "INVALID_VERIFICATION_CODE":
 					setCodeError("認証コードが正しくありません");
 					break;
+				case "EMAIL_ALREADY_IN_USE":
+					setRootError(
+						"このメールアドレスは既に別の方法で登録されています。別のログイン方法でログイン後、アカウント設定からリンクできます。",
+					);
+					break;
 				case "RATE_LIMIT_EXCEEDED":
 					setRootError("操作が多すぎます。時間をおいて再度お試しください");
 					break;
@@ -183,6 +188,21 @@ export default function Welcome() {
 			});
 
 			if (error) {
+				if (error) {
+					const errorCode: ErrorCode = error.code;
+					switch (errorCode) {
+						case "EMAIL_ALREADY_IN_USE":
+							setRootError(
+								"このメールアドレスは既に別の方法で登録されています。別のログイン方法でログイン後、アカウント設定からリンクできます。",
+							);
+							break;
+						default:
+							setRootError(
+								"エラーが発生しました。時間をおいて再度お試しください",
+							);
+					}
+					return;
+				}
 				setGoogleError(true);
 				return;
 			}
@@ -212,7 +232,7 @@ export default function Welcome() {
 			className="flex-1 bg-white"
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
 		>
-			<View className="flex-1 justify-center px-6">
+			<View className="flex-1 mt-7 justify-center px-6">
 				{rootError !== "" && (
 					<View className="mb-8">
 						<Text className="text-base text-red-500">{rootError}</Text>

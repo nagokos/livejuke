@@ -10,6 +10,7 @@ pub enum ErrorCode {
     InvalidAccessToken,
     InvalidRefreshToken,
     InvalidMediaType,
+    EmailAlreadyInUse,
     UserNotFound,
     RateLimitExceeded,
     SessionCreationFailed,

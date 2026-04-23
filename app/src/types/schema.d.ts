@@ -182,7 +182,7 @@ export interface components {
             os: string;
         };
         /** @enum {string} */
-        ErrorCode: "INVALID_EMAIL" | "INVALID_DISPLAY_NAME" | "INVALID_VERIFICATION_CODE" | "INVALID_ACCESS_TOKEN" | "INVALID_REFRESH_TOKEN" | "INVALID_MEDIA_TYPE" | "USER_NOT_FOUND" | "RATE_LIMIT_EXCEEDED" | "SESSION_CREATION_FAILED" | "NO_UPDATES_PROVIDED" | "INTERNAL_ERROR" | "UNAUTHORIZED";
+        ErrorCode: "INVALID_EMAIL" | "INVALID_DISPLAY_NAME" | "INVALID_VERIFICATION_CODE" | "INVALID_ACCESS_TOKEN" | "INVALID_REFRESH_TOKEN" | "INVALID_MEDIA_TYPE" | "EMAIL_ALREADY_IN_USE" | "USER_NOT_FOUND" | "RATE_LIMIT_EXCEEDED" | "SESSION_CREATION_FAILED" | "NO_UPDATES_PROVIDED" | "INTERNAL_ERROR" | "UNAUTHORIZED";
         ErrorResponse: {
             code: components["schemas"]["ErrorCode"];
             message: string;
@@ -202,6 +202,7 @@ export interface components {
         };
         UserAuthDetailResponse: {
             auth_status: components["schemas"]["AuthStatusResponse"];
+            avatar_url?: string | null;
             display_name: string;
             email: string;
             /** Format: int64 */

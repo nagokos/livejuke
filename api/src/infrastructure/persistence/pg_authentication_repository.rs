@@ -48,7 +48,7 @@ impl AuthRepository for PgAuthenticationRepository {
                 updated_at
         "#;
         let user: User = sqlx::query_as::<_, UserRow>(sql)
-            .bind(&user.email)
+            .bind(user.email.as_ref())
             .fetch_one(&mut *tx)
             .await?
             .try_into()?;

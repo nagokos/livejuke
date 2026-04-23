@@ -8,6 +8,8 @@ pub enum AuthenticationError {
     InvalidVerificationCode,
     #[error("authentication failed")]
     AuthenticationFailed,
+    #[error("email already in use")]
+    EmailAlreadyInUse,
     #[error("too many requests")]
     TooManyRequests,
 }
