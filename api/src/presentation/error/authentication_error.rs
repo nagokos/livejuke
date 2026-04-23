@@ -15,6 +15,13 @@ impl IntoResponse for AuthenticationError {
                     message: self.to_string(),
                 },
             ),
+            Self::EmailAlreadyInUse => (
+                StatusCode::BAD_REQUEST,
+                ErrorResponse {
+                    code: ErrorCode::EmailAlreadyInUse,
+                    message: self.to_string(),
+                },
+            ),
             Self::InvalidVerificationCode => (
                 StatusCode::UNAUTHORIZED,
                 ErrorResponse {

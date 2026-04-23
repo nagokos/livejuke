@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 
 use crate::domain::{
+    authentication::email::Email,
     id::Id,
     user::model::{UpdateUserPayload, User, UserAuthDetail},
 };
@@ -12,6 +13,7 @@ pub trait UserRepository: Send + Sync {
         &self,
         user_id: Id<User>,
     ) -> Result<UserAuthDetail, anyhow::Error>;
+    async fn find_by_email(&self, email: Email) -> Result<Option<User>, anyhow::Error>;
     async fn update(
         &self,
         user_id: Id<User>,

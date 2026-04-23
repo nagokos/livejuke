@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 use sqlx::{PgPool, prelude::FromRow};
 
 use crate::domain::{
-    authentication::model::Provider,
+    authentication::{email::Email, model::Provider},
     id::Id,
     user::{
         model::{UpdateUserPayload, User, UserAuthDetail},
@@ -61,6 +61,27 @@ impl UserRepository for PgUserRepository {
             .try_into()?;
 
         Ok(user_auth_detail)
+    }
+    async fn find_by_email(&self, email: Email) -> Result<Option<User>, anyhow::Error> {
+        let sql = r#"
+            SELECT
+                id,
+                display_name,
+                email,
+                avatar_key,
+                role,
+                created_at,
+                updated_at
+            FROM users
+            WHERE email = $1
+        "#;
+
+        sqlx::query_as::<_, UserRow>(sql)
+            .bind(email.as_ref())
+            .fetch_optional(&self.pool)
+            .await?
+            .map(User::try_from)
+            .transpose()
     }
     async fn update(
         &self,

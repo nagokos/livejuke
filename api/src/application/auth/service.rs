@@ -136,7 +136,16 @@ impl AuthService {
                 .find_user_with_auth_status(authentication.user_id)
                 .await?
         } else {
-            let user_payload = UserPayload::new(email.as_ref());
+            if self
+                .repos
+                .user_repo
+                .find_by_email(email.clone())
+                .await?
+                .is_some()
+            {
+                return Err(AuthenticationError::EmailAlreadyInUse.into());
+            }
+            let user_payload = UserPayload::new(email.clone());
             let auth_payload = AuthenticationPayload::new(Provider::Email, email.as_ref());
             let user = self
                 .repos
@@ -182,7 +191,19 @@ impl AuthService {
                 .find_user_with_auth_status(authentication.user_id)
                 .await?
         } else {
-            let user_payload = UserPayload::new(&user_info.email);
+            let email = unsafe { Email::new_unchecked(user_info.email) };
+
+            if self
+                .repos
+                .user_repo
+                .find_by_email(email.clone())
+                .await?
+                .is_some()
+            {
+                return Err(AuthenticationError::EmailAlreadyInUse.into());
+            }
+
+            let user_payload = UserPayload::new(email.clone());
             let auth_payload = AuthenticationPayload::new(Provider::Google, &user_info.sub);
             let user = self
                 .repos
@@ -233,6 +254,12 @@ impl AuthService {
             }
             return Err(AuthenticationError::InvalidVerificationCode.into());
         }
+
+        if let Some(user) = self.repos.user_repo.find_by_email(email.clone()).await?
+            && user.id.get() != user_id.get()
+        {
+            return Err(AuthenticationError::EmailAlreadyInUse.into());
+        };
 
         let provider = AuthenticationPayload::new(Provider::Email, email.as_ref());
         let user = self

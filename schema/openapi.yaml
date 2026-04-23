@@ -386,6 +386,7 @@ components:
         - INVALID_ACCESS_TOKEN
         - INVALID_REFRESH_TOKEN
         - INVALID_MEDIA_TYPE
+        - EMAIL_ALREADY_IN_USE
         - USER_NOT_FOUND
         - RATE_LIMIT_EXCEEDED
         - SESSION_CREATION_FAILED
@@ -444,6 +445,10 @@ components:
       properties:
         auth_status:
           $ref: '#/components/schemas/AuthStatusResponse'
+        avatar_url:
+          type:
+            - string
+            - "null"
         display_name:
           type: string
         email:

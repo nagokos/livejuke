@@ -48,14 +48,12 @@ impl FromStr for Role {
 
 #[derive(Debug)]
 pub struct UserPayload {
-    pub email: String,
+    pub email: Email,
 }
 
 impl UserPayload {
-    pub fn new(email: &str) -> Self {
-        Self {
-            email: email.to_string(),
-        }
+    pub fn new(email: Email) -> Self {
+        Self { email }
     }
 }
 
