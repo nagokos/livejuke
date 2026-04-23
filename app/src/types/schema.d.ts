@@ -162,7 +162,6 @@ export interface components {
         AuthResponse: {
             access_token: string;
             refresh_token: string;
-            user: components["schemas"]["UserAuthDetailResponse"];
         };
         AuthStatusResponse: {
             is_email_linked: boolean;
@@ -182,7 +181,7 @@ export interface components {
             os: string;
         };
         /** @enum {string} */
-        ErrorCode: "INVALID_EMAIL" | "INVALID_DISPLAY_NAME" | "INVALID_VERIFICATION_CODE" | "INVALID_ACCESS_TOKEN" | "INVALID_REFRESH_TOKEN" | "INVALID_MEDIA_TYPE" | "EMAIL_ALREADY_IN_USE" | "USER_NOT_FOUND" | "RATE_LIMIT_EXCEEDED" | "SESSION_CREATION_FAILED" | "NO_UPDATES_PROVIDED" | "INTERNAL_ERROR" | "UNAUTHORIZED";
+        ErrorCode: "INVALID_EMAIL" | "INVALID_DISPLAY_NAME" | "INVALID_VERIFICATION_CODE" | "INVALID_ACCESS_TOKEN" | "INVALID_REFRESH_TOKEN" | "INVALID_MEDIA_TYPE" | "INVALID_GOOGLE_TOKEN" | "GOOGLE_EMAIL_NOT_VERIFIED" | "EMAIL_ALREADY_IN_USE" | "USER_NOT_FOUND" | "GLOBAL_RATE_LIMITED" | "SEND_CODE_RATE_LIMITED" | "SESSION_CREATION_FAILED" | "NO_UPDATES_PROVIDED" | "UNAUTHORIZED" | "INTERNAL_ERROR";
         ErrorResponse: {
             code: components["schemas"]["ErrorCode"];
             message: string;
@@ -196,28 +195,23 @@ export interface components {
         SendCodeInput: {
             email: string;
         };
+        SendCodeResponse: {
+            /** Format: int32 */
+            resend_cooldown_seconds: number;
+        };
         UpdateEmailInput: {
             code: string;
             email: string;
         };
         UserAuthDetailResponse: {
             auth_status: components["schemas"]["AuthStatusResponse"];
-            avatar_url?: string | null;
-            display_name: string;
-            email: string;
-            /** Format: int64 */
-            id: number;
-            role: string;
+            user: components["schemas"]["CurrentUserResponse"];
         };
         UserAvatarUpdateInput: {
             media_type: string;
         };
         UserUpdateInput: {
             display_name: string;
-        };
-        VerificationCodeResponse: {
-            /** Format: int32 */
-            resend_cooldown_seconds: number;
         };
         VerifyCodeInput: {
             code: string;
@@ -254,7 +248,6 @@ export interface operations {
                     "application/json": components["schemas"]["CurrentUserResponse"];
                 };
             };
-            /** @description invalid email */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -263,21 +256,59 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description unauthorized error */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "UNAUTHORIZED",
+                     *       "message": "unauthorized"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description internal server error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "EMAIL_ALREADY_IN_USE",
+                     *       "message": "email already in use"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "GLOBAL_RATE_LIMITED",
+                     *       "message": "too many requests"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INTERNAL_ERROR",
+                     *       "message": "internal server error"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
@@ -301,19 +332,23 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VerificationCodeResponse"];
+                    "application/json": components["schemas"]["SendCodeResponse"];
                 };
             };
-            /** @description invalid email */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INVALID_EMAIL",
+                     *       "message": "invalid email"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description too many request */
             429: {
                 headers: {
                     [name: string]: unknown;
@@ -322,12 +357,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description internal server error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INTERNAL_ERROR",
+                     *       "message": "internal server error"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
@@ -354,7 +394,6 @@ export interface operations {
                     "application/json": components["schemas"]["AuthResponse"];
                 };
             };
-            /** @description invalid email */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -363,21 +402,45 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description unauthorized error */
-            401: {
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "EMAIL_ALREADY_IN_USE",
+                     *       "message": "email already in use"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description internal server error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "GLOBAL_RATE_LIMITED",
+                     *       "message": "too many requests"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INTERNAL_ERROR",
+                     *       "message": "internal server error"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
@@ -404,21 +467,73 @@ export interface operations {
                     "application/json": components["schemas"]["AuthResponse"];
                 };
             };
-            /** @description unauthorized error */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INVALID_GOOGLE_TOKEN",
+                     *       "message": "invalid google token"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description internal server error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "GOOGLE_EMAIL_NOT_VERIFIED",
+                     *       "message": "google email not verified"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "EMAIL_ALREADY_IN_USE",
+                     *       "message": "email already in use"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "GLOBAL_RATE_LIMITED",
+                     *       "message": "too many requests"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INTERNAL_ERROR",
+                     *       "message": "internal server error"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
@@ -443,21 +558,31 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description unauthorized error */
-            401: {
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "GLOBAL_RATE_LIMITED",
+                     *       "message": "too many requests"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description internal server error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INTERNAL_ERROR",
+                     *       "message": "internal server error"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
@@ -484,21 +609,45 @@ export interface operations {
                     "application/json": components["schemas"]["AuthResponse"];
                 };
             };
-            /** @description unauthorized error */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INVALID_REFRESH_TOKEN",
+                     *       "message": "invalid refresh token"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description internal server error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "GLOBAL_RATE_LIMITED",
+                     *       "message": "too many requests"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INTERNAL_ERROR",
+                     *       "message": "internal server error"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
@@ -521,21 +670,45 @@ export interface operations {
                     "application/json": components["schemas"]["UserAuthDetailResponse"];
                 };
             };
-            /** @description unauthorized error */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "UNAUTHORIZED",
+                     *       "message": "unauthorized"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description internal server error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "GLOBAL_RATE_LIMITED",
+                     *       "message": "too many requests"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INTERNAL_ERROR",
+                     *       "message": "internal server error"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
@@ -562,7 +735,6 @@ export interface operations {
                     "application/json": components["schemas"]["CurrentUserResponse"];
                 };
             };
-            /** @description invalid input */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -571,21 +743,45 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description unauthorized error */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "UNAUTHORIZED",
+                     *       "message": "unauthorized"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description internal server error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "GLOBAL_RATE_LIMITED",
+                     *       "message": "too many requests"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INTERNAL_ERROR",
+                     *       "message": "internal server error"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
@@ -608,21 +804,45 @@ export interface operations {
                     "application/json": components["schemas"]["CurrentUserResponse"];
                 };
             };
-            /** @description unauthorized error */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "UNAUTHORIZED",
+                     *       "message": "unauthorized"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description internal server error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "GLOBAL_RATE_LIMITED",
+                     *       "message": "too many requests"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INTERNAL_ERROR",
+                     *       "message": "internal server error"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
@@ -649,30 +869,59 @@ export interface operations {
                     "application/json": components["schemas"]["PresignedUriResponse"];
                 };
             };
-            /** @description invalid input */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INVALID_MEDIA_TYPE",
+                     *       "message": "invalid media type"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description unauthorized error */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "UNAUTHORIZED",
+                     *       "message": "unauthorized"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description internal server error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "GLOBAL_RATE_LIMITED",
+                     *       "message": "too many requests"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "code": "INTERNAL_ERROR",
+                     *       "message": "internal server error"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };

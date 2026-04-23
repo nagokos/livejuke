@@ -1,12 +1,12 @@
 import React, { useLayoutEffect } from "react";
 import { useNavigation } from "expo-router";
-import { useAuthStore } from "@/stores/auth";
 import Welcome from "@/components/features/Welcome";
 import Settings from "@/components/features/Settings";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function MypageTab() {
 	const navigation = useNavigation();
-	const currentUser = useAuthStore((state) => state.currentUser);
+	const { currentUser } = useCurrentUser();
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
