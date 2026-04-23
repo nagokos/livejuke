@@ -44,11 +44,12 @@ impl UserRepository for PgUserRepository {
                 u.display_name,
                 u.email,
                 u.avatar_key,
+                u.role,
                 u.created_at,
                 u.updated_at,
                 COALESCE(array_agg(a.provider) FILTER (WHERE a.provider IS NOT NULL), '{}') as linked_providers
             FROM users as u 
-            LEFT JOIN authentication as a ON u.id = a.user_id
+            LEFT JOIN authentications as a ON u.id = a.user_id
             WHERE u.id = $1
             GROUP BY u.id
         "#;

@@ -41,7 +41,13 @@ async fn get_me(
             AppError::User(UserError::NotFound) => AuthenticationError::AuthenticationFailed.into(),
             _ => e,
         })?;
-    Ok((StatusCode::OK, Json(result.into())))
+    Ok((
+        StatusCode::OK,
+        Json(UserAuthDetailResponse::from_domain(
+            result,
+            state.cdn_base_url,
+        )),
+    ))
 }
 
 #[utoipa::path(

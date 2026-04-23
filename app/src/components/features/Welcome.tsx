@@ -124,7 +124,10 @@ export default function Welcome() {
 	}, [sendCode, getValues]);
 
 	const onVerifyCode = useCallback(async () => {
-		if (!code) return;
+		if (!code) {
+			setCodeError("認証コードを入力してください");
+			return;
+		}
 		setCodeError("");
 		setRootError("");
 

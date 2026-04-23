@@ -208,7 +208,7 @@ impl AuthService {
         user_id: Id<User>,
         email: Email,
         code: String,
-    ) -> Result<User, anyhow::Error> {
+    ) -> Result<User, AppError> {
         let Some(data) = self.providers.verification_code_store.find(&email).await? else {
             return Err(AuthenticationError::InvalidVerificationCode.into());
         };

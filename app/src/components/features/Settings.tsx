@@ -7,8 +7,12 @@ import {
 } from "lucide-react-native";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { router } from "expo-router";
+import { Image } from "expo-image";
+import { useAuthStore } from "@/stores/auth";
 
 export default function Settings() {
+	const current_user = useAuthStore((state) => state.currentUser);
+
 	return (
 		<View className="flex-1 bg-white">
 			<View className="mt-10 mx-5">
@@ -17,12 +21,15 @@ export default function Settings() {
 					onPress={() => router.push("/profile")}
 				>
 					<View className="w-10 items-center justify-center">
-						<Avatar className="size-12" alt="Zach Nugent's Avatar">
+						<Avatar className="size-12" alt="user avatar">
 							<AvatarImage
-								source={{ uri: "https://github.com/mrzachnugent.png" }}
+								source={{ uri: current_user?.avatar_url ?? undefined }}
 							/>
-							<AvatarFallback>
-								<Text>ZN</Text>
+							<AvatarFallback className="bg-transparent">
+								<Image
+									source={require("@/assets/images/user_default_avatar.png")}
+									style={{ width: "100%", height: "100%" }}
+								/>
 							</AvatarFallback>
 						</Avatar>
 					</View>

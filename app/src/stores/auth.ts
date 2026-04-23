@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { components } from "@/types/schema";
 import { clearAuth } from "@/lib/auth-storage";
 
-type CurrentUser = components["schemas"]["AuthResponse"]["user"];
+type CurrentUser = components["schemas"]["CurrentUserResponse"];
 
 interface AuthState {
 	currentUser: CurrentUser | null;
@@ -31,5 +31,4 @@ export const useAuthStore = create<AuthState>((set) => ({
 	},
 }));
 
-// 派生状態（カスタムフック）
 export const useIsLoggedIn = () => useAuthStore((state) => !!state.currentUser);
