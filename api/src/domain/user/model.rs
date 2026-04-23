@@ -46,6 +46,19 @@ impl FromStr for Role {
     }
 }
 
+#[derive(Debug)]
+pub struct UserPayload {
+    pub email: String,
+}
+
+impl UserPayload {
+    pub fn new(email: &str) -> Self {
+        Self {
+            email: email.to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct UserAuthDetail {
     pub user: User,

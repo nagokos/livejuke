@@ -29,7 +29,7 @@ use crate::{
             repository::SessionRepository,
         },
         user::{
-            model::{User, UserAuthDetail},
+            model::{User, UserAuthDetail, UserPayload},
             repository::UserRepository,
         },
     },
@@ -136,11 +136,12 @@ impl AuthService {
                 .find_user_with_auth_status(authentication.user_id)
                 .await?
         } else {
-            let payload = AuthenticationPayload::new(Provider::Email, email.as_ref());
+            let user_payload = UserPayload::new(email.as_ref());
+            let auth_payload = AuthenticationPayload::new(Provider::Email, email.as_ref());
             let user = self
                 .repos
                 .auth_repo
-                .create_user_with_authentication(payload)
+                .create_user_with_authentication(user_payload, auth_payload)
                 .await?;
             UserAuthDetail {
                 user,
@@ -181,11 +182,12 @@ impl AuthService {
                 .find_user_with_auth_status(authentication.user_id)
                 .await?
         } else {
-            let payload = AuthenticationPayload::new(Provider::Google, &user_info.sub);
+            let user_payload = UserPayload::new(&user_info.email);
+            let auth_payload = AuthenticationPayload::new(Provider::Google, &user_info.sub);
             let user = self
                 .repos
                 .auth_repo
-                .create_user_with_authentication(payload)
+                .create_user_with_authentication(user_payload, auth_payload)
                 .await?;
             UserAuthDetail {
                 user,
@@ -239,6 +241,11 @@ impl AuthService {
             .update_user_with_authentication(user_id, provider)
             .await?;
 
+        self.providers
+            .verification_code_store
+            .delete(&email)
+            .await?;
+
         Ok(user)
     }
     pub async fn auth_refresh(&self, refresh_token: RefreshToken) -> Result<AuthResult, AppError> {
@@ -263,20 +270,18 @@ impl AuthService {
 
         self.repos.session_repo.revoke(&session.token_hash).await?;
 
-        let user = self
+        let user_auth_detail = self
             .repos
             .user_repo
-            .find_by_id(session.user_id)
-            .await?
-            .ok_or(SessionError::InvalidRefreshToken)?;
+            .find_user_with_auth_status(session.user_id)
+            .await?;
 
-        let (access_token, refresh_token) = self.create_session(&user, session.device_info).await?;
+        let (access_token, refresh_token) = self
+            .create_session(&user_auth_detail.user, session.device_info)
+            .await?;
 
         Ok(AuthResult {
-            user_auth_detail: UserAuthDetail {
-                user,
-                linked_providers: vec![Provider::Google],
-            },
+            user_auth_detail,
             access_token,
             refresh_token,
         })

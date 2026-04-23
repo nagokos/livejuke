@@ -9,7 +9,7 @@ use crate::{
             repository::AuthRepository,
         },
         id::Id,
-        user::model::User,
+        user::model::{User, UserPayload},
     },
     infrastructure::persistence::pg_user_repository::UserRow,
 };
@@ -28,6 +28,7 @@ impl PgAuthenticationRepository {
 impl AuthRepository for PgAuthenticationRepository {
     async fn create_user_with_authentication(
         &self,
+        user: UserPayload,
         authentication: AuthenticationPayload,
     ) -> Result<User, anyhow::Error> {
         let mut tx = self.pool.begin().await?;
@@ -47,7 +48,7 @@ impl AuthRepository for PgAuthenticationRepository {
                 updated_at
         "#;
         let user: User = sqlx::query_as::<_, UserRow>(sql)
-            .bind(&authentication.uid)
+            .bind(&user.email)
             .fetch_one(&mut *tx)
             .await?
             .try_into()?;
