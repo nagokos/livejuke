@@ -66,10 +66,7 @@ async fn verify_code(
         )
         .await?;
 
-    Ok((
-        StatusCode::OK,
-        Json(AuthResponse::from_domain(result, state.cdn_base_url)),
-    ))
+    Ok((StatusCode::OK, Json(result.into())))
 }
 
 #[utoipa::path(
@@ -122,10 +119,7 @@ async fn auth_google(
         .auth_google(input.id_token, input.device_info.into())
         .await?;
 
-    Ok((
-        StatusCode::OK,
-        Json(AuthResponse::from_domain(result, state.cdn_base_url)),
-    ))
+    Ok((StatusCode::OK, Json(result.into())))
 }
 
 #[utoipa::path(
@@ -147,10 +141,7 @@ async fn auth_refresh(
         .auth_refresh(input.refresh_token.into())
         .await?;
 
-    Ok((
-        StatusCode::OK,
-        Json(AuthResponse::from_domain(result, state.cdn_base_url)),
-    ))
+    Ok((StatusCode::OK, Json(result.into())))
 }
 
 #[utoipa::path(

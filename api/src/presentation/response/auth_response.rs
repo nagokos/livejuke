@@ -8,15 +8,13 @@ use crate::{
 
 #[derive(Serialize, ToSchema)]
 pub struct AuthResponse {
-    user: UserAuthDetailResponse,
     access_token: String,
     refresh_token: String,
 }
 
-impl AuthResponse {
-    pub fn from_domain(value: AuthResult, cdn_base_url: String) -> Self {
+impl From<AuthResult> for AuthResponse {
+    fn from(value: AuthResult) -> Self {
         Self {
-            user: UserAuthDetailResponse::from_domain(value.user_auth_detail, cdn_base_url),
             access_token: value.access_token.to_string(),
             refresh_token: value.refresh_token.to_string(),
         }
