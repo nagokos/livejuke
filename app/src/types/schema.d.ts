@@ -68,6 +68,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/google/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auth_google_link"];
+        delete: operations["auth_google_unlink"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/logout": {
         parameters: {
             query?: never;
@@ -181,10 +197,13 @@ export interface components {
             os: string;
         };
         /** @enum {string} */
-        ErrorCode: "INVALID_EMAIL" | "INVALID_DISPLAY_NAME" | "INVALID_VERIFICATION_CODE" | "INVALID_ACCESS_TOKEN" | "INVALID_REFRESH_TOKEN" | "INVALID_MEDIA_TYPE" | "INVALID_GOOGLE_TOKEN" | "GOOGLE_EMAIL_NOT_VERIFIED" | "EMAIL_ALREADY_IN_USE" | "USER_NOT_FOUND" | "GLOBAL_RATE_LIMITED" | "SEND_CODE_RATE_LIMITED" | "SESSION_CREATION_FAILED" | "NO_UPDATES_PROVIDED" | "UNAUTHORIZED" | "INTERNAL_ERROR";
+        ErrorCode: "INVALID_EMAIL" | "INVALID_DISPLAY_NAME" | "INVALID_VERIFICATION_CODE" | "INVALID_ACCESS_TOKEN" | "INVALID_REFRESH_TOKEN" | "INVALID_MEDIA_TYPE" | "INVALID_GOOGLE_TOKEN" | "GOOGLE_EMAIL_NOT_VERIFIED" | "GOOGLE_ACCOUNT_ALREADY_IN_USE" | "EMAIL_AUTHENTICATION_REQUIRED" | "EMAIL_ALREADY_IN_USE" | "USER_NOT_FOUND" | "GLOBAL_RATE_LIMITED" | "SEND_CODE_RATE_LIMITED" | "SESSION_CREATION_FAILED" | "NO_UPDATES_PROVIDED" | "UNAUTHORIZED" | "INTERNAL_ERROR";
         ErrorResponse: {
             code: components["schemas"]["ErrorCode"];
             message: string;
+        };
+        LinkGoogleInput: {
+            id_token: string;
         };
         LogoutInput: {
             refresh_token: string;
@@ -504,6 +523,156 @@ export interface operations {
                      * @example {
                      *       "code": "EMAIL_ALREADY_IN_USE",
                      *       "message": "email already in use"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "GLOBAL_RATE_LIMITED",
+                     *       "message": "too many requests"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "INTERNAL_ERROR",
+                     *       "message": "internal server error"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    auth_google_link: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkGoogleInput"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "INVALID_GOOGLE_TOKEN",
+                     *       "message": "invalid google token"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "GOOGLE_EMAIL_NOT_VERIFIED",
+                     *       "message": "google email not verified"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "GOOGLE_ACCOUNT_ALREADY_IN_USE",
+                     *       "message": "google account already in use"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "GLOBAL_RATE_LIMITED",
+                     *       "message": "too many requests"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "INTERNAL_ERROR",
+                     *       "message": "internal server error"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    auth_google_unlink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "EMAIL_AUTHENTICATION_REQUIRED",
+                     *       "message": "email authentication is requiered before unlinkng google"
                      *     }
                      */
                     "application/json": components["schemas"]["ErrorResponse"];

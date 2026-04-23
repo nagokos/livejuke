@@ -22,6 +22,11 @@ pub struct AuthGoogleInput {
 }
 
 #[derive(Deserialize, ToSchema)]
+pub struct LinkGoogleInput {
+    pub id_token: String,
+}
+
+#[derive(Deserialize, ToSchema)]
 pub struct AuthRefreshInput {
     pub refresh_token: String,
 }

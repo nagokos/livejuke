@@ -10,6 +10,10 @@ pub enum AuthenticationError {
     AuthenticationFailed,
     #[error("email already in use")]
     EmailAlreadyInUse,
+    #[error("email authentication required")]
+    EmailAuthenticationRequired,
+    #[error("google account already in use")]
+    GoogleAccountAlreadyInUse,
     #[error("too many requests")]
     TooManyRequests,
 }

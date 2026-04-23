@@ -1,6 +1,10 @@
 import { Platform } from "react-native";
 import { client } from "@/api/client";
-import { saveAccessToken, saveRefreshToken } from "@/lib/auth-storage";
+import {
+	getRefreshToken,
+	saveAccessToken,
+	saveRefreshToken,
+} from "@/lib/auth-storage";
 import { components } from "@/types/schema";
 import {
 	GoogleSignin,
@@ -33,7 +37,7 @@ const getDeviceInfo = () => ({
 
 export const useAuthMutation = () => {
 	const queryClient = useQueryClient();
-	const logout = useAuthStore((state) => state.logout);
+	const zustandLogout = useAuthStore((state) => state.logout);
 	const setHasToken = useAuthStore((state) => state.setHasToken);
 
 	const refreshCurrentUser = async () => {
@@ -61,7 +65,7 @@ export const useAuthMutation = () => {
 
 			router.replace("/");
 		} catch (e) {
-			await logout();
+			await zustandLogout();
 			throw e;
 		}
 	};
@@ -101,31 +105,13 @@ export const useAuthMutation = () => {
 		onSuccess: handleAuthSuccess,
 	});
 
-	const authGoogle = useMutation<AuthResponse, AppErrorWithResponse>({
-		mutationFn: async () => {
-			let googleResponse;
+	const getIdToken = async () => {
+		let googleResponse;
 
-			try {
-				googleResponse = await GoogleSignin.signIn();
-			} catch (err) {
-				if (isErrorWithCode(err) && err.code === statusCodes.SIGN_IN_CANCELLED)
-					throw {
-						error: {
-							code: "GOOGLE_AUTH_CANCELLED",
-							message: "cancel google authentication",
-						},
-					};
-
-				console.error("Google SDK Error:", err);
-				throw {
-					error: {
-						code: "GOOGLE_SDK_ERROR",
-						message: "internal google authentication error",
-					},
-				};
-			}
-
-			if (!isSuccessResponse(googleResponse))
+		try {
+			googleResponse = await GoogleSignin.signIn();
+		} catch (err) {
+			if (isErrorWithCode(err) && err.code === statusCodes.SIGN_IN_CANCELLED)
 				throw {
 					error: {
 						code: "GOOGLE_AUTH_CANCELLED",
@@ -133,25 +119,76 @@ export const useAuthMutation = () => {
 					},
 				};
 
-			if (!googleResponse.data.idToken)
-				throw {
-					error: {
-						code: "GOOGLE_AUTH_NO_TOKEN",
-						message: "no token google authentication",
-					},
-				};
+			console.error("Google SDK Error:", err);
+			throw {
+				error: {
+					code: "GOOGLE_SDK_ERROR",
+					message: "internal google authentication error",
+				},
+			};
+		}
 
-			const idToken = googleResponse.data.idToken;
+		if (!isSuccessResponse(googleResponse))
+			throw {
+				error: {
+					code: "GOOGLE_AUTH_CANCELLED",
+					message: "cancel google authentication",
+				},
+			};
 
-			const { data, error, response } = await client.POST("/auth/google", {
-				body: { id_token: idToken, device_info: getDeviceInfo() },
-			});
+		if (!googleResponse.data.idToken)
+			throw {
+				error: {
+					code: "GOOGLE_AUTH_NO_TOKEN",
+					message: "no token google authentication",
+				},
+			};
 
-			if (error) throw { error, response };
+		const idToken = googleResponse.data.idToken;
+		return idToken;
+	};
 
-			return data;
+	const authGoogle = useMutation<AuthResponse, AppErrorWithResponse, undefined>(
+		{
+			mutationFn: async () => {
+				const idToken = await getIdToken();
+				const { data, error, response } = await client.POST("/auth/google", {
+					body: { id_token: idToken, device_info: getDeviceInfo() },
+				});
+				if (error) throw { error, response };
+				return data;
+			},
+			onSuccess: handleAuthSuccess,
 		},
-		onSuccess: handleAuthSuccess,
+	);
+
+	const authGoogleLink = useMutation<
+		undefined,
+		AppErrorWithResponse,
+		undefined
+	>({
+		mutationFn: async () => {
+			const idToken = await getIdToken();
+			const { error, response } = await client.POST("/auth/google/link", {
+				body: { id_token: idToken },
+			});
+			if (error) throw { error, response };
+			return;
+		},
+		onSuccess: refreshCurrentUser,
+	});
+
+	const authGoogleUnlink = useMutation<
+		undefined,
+		AppErrorWithResponse,
+		undefined
+	>({
+		mutationFn: async () => {
+			const { error, response } = await client.DELETE("/auth/google/link");
+			if (error) throw { error, response };
+			return;
+		},
+		onSuccess: refreshCurrentUser,
 	});
 
 	const upsertEmail = useMutation<
@@ -163,23 +200,48 @@ export const useAuthMutation = () => {
 			const { data, error, response } = await client.PATCH("/auth/email", {
 				body: params,
 			});
-
 			if (error) throw { error, response };
-
 			return data;
 		},
 		onSuccess: refreshCurrentUser,
 	});
 
+	const logout = async () => {
+		const token = await getRefreshToken();
+		if (!token) {
+			router.replace("/(tabs)");
+			return;
+		}
+
+		try {
+			await client.POST("/auth/logout", {
+				body: {
+					refresh_token: token,
+				},
+			});
+		} catch (e) {
+			console.log(e);
+		} finally {
+			console.log("logout");
+			await zustandLogout();
+			router.replace("/(tabs)");
+		}
+	};
+
 	return {
 		sendCode,
 		verifyCode,
 		authGoogle,
+		authGoogleLink,
+		authGoogleUnlink,
 		upsertEmail,
+		logout,
 		isProcessing:
 			sendCode.isPending ||
 			verifyCode.isPending ||
 			authGoogle.isPending ||
+			authGoogleLink.isPending ||
+			authGoogleUnlink.isPending ||
 			upsertEmail.isPending,
 	};
 };

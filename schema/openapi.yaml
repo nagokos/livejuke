@@ -241,6 +241,95 @@ paths:
               example:
                 code: INTERNAL_ERROR
                 message: internal server error
+  /auth/google/link:
+    post:
+      operationId: auth_google_link
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkGoogleInput'
+        required: true
+      responses:
+        "204":
+          description: ""
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_GOOGLE_TOKEN
+                message: invalid google token
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GOOGLE_EMAIL_NOT_VERIFIED
+                message: google email not verified
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GOOGLE_ACCOUNT_ALREADY_IN_USE
+                message: google account already in use
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GLOBAL_RATE_LIMITED
+                message: too many requests
+        "500":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
+    delete:
+      operationId: auth_google_unlink
+      responses:
+        "204":
+          description: ""
+        "422":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: EMAIL_AUTHENTICATION_REQUIRED
+                message: email authentication is requiered before unlinkng google
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GLOBAL_RATE_LIMITED
+                message: too many requests
+        "500":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
   /auth/logout:
     post:
       operationId: logout
@@ -579,6 +668,8 @@ components:
         - INVALID_MEDIA_TYPE
         - INVALID_GOOGLE_TOKEN
         - GOOGLE_EMAIL_NOT_VERIFIED
+        - GOOGLE_ACCOUNT_ALREADY_IN_USE
+        - EMAIL_AUTHENTICATION_REQUIRED
         - EMAIL_ALREADY_IN_USE
         - USER_NOT_FOUND
         - GLOBAL_RATE_LIMITED
@@ -596,6 +687,13 @@ components:
         code:
           $ref: '#/components/schemas/ErrorCode'
         message:
+          type: string
+    LinkGoogleInput:
+      type: object
+      required:
+        - id_token
+      properties:
+        id_token:
           type: string
     LogoutInput:
       type: object

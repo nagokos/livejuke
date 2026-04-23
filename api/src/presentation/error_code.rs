@@ -12,6 +12,8 @@ pub enum ErrorCode {
     InvalidMediaType,
     InvalidGoogleToken,
     GoogleEmailNotVerified,
+    GoogleAccountAlreadyInUse,
+    EmailAuthenticationRequired,
     EmailAlreadyInUse,
     UserNotFound,
     GlobalRateLimited,

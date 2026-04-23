@@ -6,13 +6,14 @@ import { valibotResolver } from "@hookform/resolvers/valibot";
 import { SendCodeFormValues, sendCodeSchema } from "@/lib/validations/auth";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react-native";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useAuthStatus, useCurrentUser } from "@/hooks/useCurrentUser";
 import { useAuthMutation } from "@/hooks/useAuthMutation";
 
 const RATE_LIMIT_DURATION = 60000;
 
 export default function EmailEdit() {
 	const { currentUser } = useCurrentUser();
+	const { authStatus } = useAuthStatus();
 
 	const [step, setStep] = useState<"email" | "code">("email");
 	const [code, setCode] = useState("");
@@ -139,10 +140,12 @@ export default function EmailEdit() {
 						<Text className="text-base text-red-500">{rootError}</Text>
 					</View>
 				)}
-				<View className="gap-1">
-					<Text className="text-sm text-gray-500">現在のメールアドレス</Text>
-					<Text className="text-lg font-medium">{currentUser?.email}</Text>
-				</View>
+				{authStatus?.is_email_linked && (
+					<View className="gap-1">
+						<Text className="text-sm text-gray-500">現在のメールアドレス</Text>
+						<Text className="text-lg font-medium">{currentUser?.email}</Text>
+					</View>
+				)}
 
 				<Controller
 					name="email"
