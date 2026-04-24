@@ -185,7 +185,7 @@ async fn main() -> anyhow::Result<()> {
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", openapi))
         .layer(GovernorLayer::new(governor_conf).error_handler(|_| {
             let error_response = ErrorResponse {
-                code: ErrorCode::RateLimitExceeded,
+                code: ErrorCode::GlobalRateLimited,
                 message: "too many requests".to_string(),
             };
             (StatusCode::TOO_MANY_REQUESTS, Json(error_response)).into_response()

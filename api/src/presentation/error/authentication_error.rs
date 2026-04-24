@@ -32,7 +32,7 @@ impl IntoResponse for AuthenticationError {
             Self::TooManyRequests => (
                 StatusCode::TOO_MANY_REQUESTS,
                 ErrorResponse {
-                    code: ErrorCode::RateLimitExceeded,
+                    code: ErrorCode::SendCodeRateLimited,
                     message: self.to_string(),
                 },
             ),
