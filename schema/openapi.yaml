@@ -55,7 +55,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VerificationCodeResponse'
+                $ref: '#/components/schemas/SendCodeResponse'
         "400":
           description: invalid email
           content:
@@ -321,7 +321,6 @@ components:
     AuthResponse:
       type: object
       required:
-        - user
         - access_token
         - refresh_token
       properties:
@@ -329,8 +328,6 @@ components:
           type: string
         refresh_token:
           type: string
-        user:
-          $ref: '#/components/schemas/UserAuthDetailResponse'
     AuthStatusResponse:
       type: object
       required:
@@ -424,6 +421,15 @@ components:
       properties:
         email:
           type: string
+    SendCodeResponse:
+      type: object
+      required:
+        - resend_cooldown_seconds
+      properties:
+        resend_cooldown_seconds:
+          type: integer
+          format: int32
+          minimum: 0
     UpdateEmailInput:
       type: object
       required:
@@ -437,27 +443,13 @@ components:
     UserAuthDetailResponse:
       type: object
       required:
-        - id
-        - display_name
-        - email
-        - role
+        - user
         - auth_status
       properties:
         auth_status:
           $ref: '#/components/schemas/AuthStatusResponse'
-        avatar_url:
-          type:
-            - string
-            - "null"
-        display_name:
-          type: string
-        email:
-          type: string
-        id:
-          type: integer
-          format: int64
-        role:
-          type: string
+        user:
+          $ref: '#/components/schemas/CurrentUserResponse'
     UserAvatarUpdateInput:
       type: object
       required:
@@ -472,15 +464,6 @@ components:
       properties:
         display_name:
           type: string
-    VerificationCodeResponse:
-      type: object
-      required:
-        - resend_cooldown_seconds
-      properties:
-        resend_cooldown_seconds:
-          type: integer
-          format: int32
-          minimum: 0
     VerifyCodeInput:
       type: object
       required:

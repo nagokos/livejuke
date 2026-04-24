@@ -7,7 +7,7 @@ use crate::presentation::request::auth::{
     VerifyCodeInput,
 };
 use crate::presentation::response::user_response::CurrentUserResponse;
-use crate::presentation::response::verification_code_response::VerificationCodeResponse;
+use crate::presentation::response::verification_code_response::SendCodeResponse;
 use crate::{
     AppState, application::error::AppError, presentation::response::auth_response::AuthResponse,
 };
@@ -21,7 +21,7 @@ use utoipa_axum::routes;
     path = "/email/send-code",
     request_body = SendCodeInput,
     responses(
-        (status = 200, body = VerificationCodeResponse),
+        (status = 200, body = SendCodeResponse),
         (status = 400, body = ErrorResponse, description = "invalid email"),
         (status = 429, body = ErrorResponse, description = "too many request"),
         (status = 500, body = ErrorResponse, description = "internal server error"),
@@ -30,7 +30,7 @@ use utoipa_axum::routes;
 async fn send_code(
     State(state): State<AppState>,
     Json(input): Json<SendCodeInput>,
-) -> Result<(StatusCode, Json<VerificationCodeResponse>), AppError> {
+) -> Result<(StatusCode, Json<SendCodeResponse>), AppError> {
     state
         .auth_service
         .send_verification_code(Email::try_new(input.email).map_err(AuthenticationError::from)?)
@@ -38,7 +38,7 @@ async fn send_code(
 
     Ok((
         StatusCode::OK,
-        Json(VerificationCodeResponse::new(state.resend_cooldown_seconds)),
+        Json(SendCodeResponse::new(state.resend_cooldown_seconds)),
     ))
 }
 
