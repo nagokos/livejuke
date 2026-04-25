@@ -5,7 +5,10 @@ use jsonwebtoken::{DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-use crate::application::traits::{id_token_verifier::IdTokenVerifier, types::ExternalUserInfo};
+use crate::application::traits::{
+    id_token_verifier::{IdTokenVerifier, OidcVerifyError},
+    types::ExternalUserInfo,
+};
 
 const GOOGLE_JWKS_URI: &str = "https://www.googleapis.com/oauth2/v3/certs";
 
@@ -25,7 +28,7 @@ pub struct GoogleTokenVerifier {
 }
 
 impl GoogleTokenVerifier {
-    pub async fn new(client_id: String, http_client: Client) -> Result<Self, anyhow::Error> {
+    pub async fn new(client_id: String, http_client: Client) -> Result<Self, OidcVerifyError> {
         let response = http_client
             .get(GOOGLE_JWKS_URI)
             .send()
@@ -42,7 +45,7 @@ impl GoogleTokenVerifier {
             cached_keys,
         })
     }
-    async fn refresh_keys(&self) -> Result<(), anyhow::Error> {
+    async fn refresh_keys(&self) -> Result<(), OidcVerifyError> {
         let response = self
             .http_client
             .get(GOOGLE_JWKS_URI)
@@ -54,7 +57,7 @@ impl GoogleTokenVerifier {
         let mut write = self
             .cached_keys
             .write()
-            .map_err(|_| anyhow::anyhow!("lock poisoned"))?;
+            .map_err(|_| OidcVerifyError::Internal("lock poisoned".to_string()))?;
         *write = jwks;
 
         Ok(())
@@ -63,21 +66,19 @@ impl GoogleTokenVerifier {
 
 #[async_trait]
 impl IdTokenVerifier for GoogleTokenVerifier {
-    async fn verify(&self, id_token: &str) -> Result<ExternalUserInfo, anyhow::Error> {
-        let header = decode_header(id_token).map_err(|e| {
-            tracing::error!(error = %e, "failed to decode JWT header");
-            e
-        })?;
+    async fn verify(&self, id_token: &str) -> Result<ExternalUserInfo, OidcVerifyError> {
+        let header = decode_header(id_token)
+            .map_err(|e| OidcVerifyError::InvalidToken(format!("Header decode failed: {}", e)))?;
 
         let Some(kid) = header.kid else {
-            return Err(anyhow::anyhow!("Token doesn't have a `kid` header field"));
+            return Err(OidcVerifyError::InvalidToken("Missing kid header".into()));
         };
 
         let jwk = {
             let jwks = self
                 .cached_keys
                 .read()
-                .map_err(|_| anyhow::anyhow!("lock poisoned"))?;
+                .map_err(|_| OidcVerifyError::Internal("lock poisoned".to_string()))?;
             jwks.find(&kid).cloned()
         };
 
@@ -92,10 +93,10 @@ impl IdTokenVerifier for GoogleTokenVerifier {
                 let jwks = self
                     .cached_keys
                     .read()
-                    .map_err(|_| anyhow::anyhow!("lock poisoned"))?;
-                jwks.find(&kid)
-                    .cloned()
-                    .ok_or_else(|| anyhow::anyhow!("No matching JWK found for the given kid"))?
+                    .map_err(|_| OidcVerifyError::Internal("lock poisoned".to_string()))?;
+                jwks.find(&kid).cloned().ok_or_else(|| {
+                    OidcVerifyError::Internal("No matching JWK found for the given kid".to_string())
+                })?
             }
         };
 
@@ -107,18 +108,19 @@ impl IdTokenVerifier for GoogleTokenVerifier {
             validation
         };
 
-        let decoded_token =
-            decode::<GoogleResponse>(id_token, &DecodingKey::from_jwk(&jwk)?, &validation)
-                .map_err(|e| {
-                    tracing::error!(error = %e, "failed to verify Google id_token");
-                    e
-                })?;
+        let decoded_token = decode::<GoogleResponse>(
+            id_token,
+            &DecodingKey::from_jwk(&jwk)
+                .map_err(|e| OidcVerifyError::InvalidToken(e.to_string()))?,
+            &validation,
+        )
+        .map_err(|e| {
+            tracing::error!(error = %e, "failed to verify Google id_token");
+            OidcVerifyError::InvalidToken(e.to_string())
+        })?;
 
         if !decoded_token.claims.email_verified {
-            tracing::error!(email = %decoded_token.claims.email, "email not verified");
-            return Err(anyhow::anyhow!(
-                "Google account email address has not been verified"
-            ));
+            return Err(OidcVerifyError::EmailNotVerified);
         }
 
         Ok(ExternalUserInfo {

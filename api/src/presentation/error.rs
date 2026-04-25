@@ -9,6 +9,7 @@ use utoipa::ToSchema;
 use crate::{application::error::AppError, presentation::error_code::ErrorCode};
 
 pub mod authentication_error;
+pub mod external_auth_error;
 pub mod session_error;
 pub mod user_error;
 
@@ -24,6 +25,7 @@ impl IntoResponse for AppError {
             Self::User(e) => e.into_response(),
             Self::Authentication(e) => e.into_response(),
             Self::Session(e) => e.into_response(),
+            Self::GoogleError(e) => e.into_response(),
             Self::MediaType(e) => (
                 StatusCode::BAD_REQUEST,
                 Json(ErrorResponse {
