@@ -10,6 +10,8 @@ pub enum ErrorCode {
     InvalidAccessToken,
     InvalidRefreshToken,
     InvalidMediaType,
+    InvalidGoogleToken,
+    GoogleEmailNotVerified,
     EmailAlreadyInUse,
     UserNotFound,
     GlobalRateLimited,
