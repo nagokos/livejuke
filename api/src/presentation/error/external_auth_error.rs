@@ -16,7 +16,7 @@ impl IntoResponse for OidcVerifyError {
                     message: self.to_string(),
                 },
             ),
-            Self::EmailNotVerified => (StatusCode::UNAUTHORIZED, {
+            Self::EmailNotVerified => (StatusCode::FORBIDDEN, {
                 ErrorResponse {
                     code: ErrorCode::GoogleEmailNotVerified,
                     message: self.to_string(),

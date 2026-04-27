@@ -16,7 +16,7 @@ impl IntoResponse for AuthenticationError {
                 },
             ),
             Self::EmailAlreadyInUse => (
-                StatusCode::BAD_REQUEST,
+                StatusCode::CONFLICT,
                 ErrorResponse {
                     code: ErrorCode::EmailAlreadyInUse,
                     message: self.to_string(),
