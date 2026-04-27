@@ -22,9 +22,14 @@ use utoipa_axum::routes;
     request_body = SendCodeInput,
     responses(
         (status = 200, body = SendCodeResponse),
-        (status = 400, body = ErrorResponse, description = "invalid email"),
-        (status = 429, body = ErrorResponse, description = "too many request"),
-        (status = 500, body = ErrorResponse, description = "internal server error"),
+        (status = 400, body = ErrorResponse, example = json!({ "code": "INVALID_EMAIL", "message": "invalid email" })),
+        (status = 429, body = ErrorResponse, 
+            examples(
+                ("Send Code Rate Limited" = (value = json!({ "code": "SEND_CODE_RATE_LIMITED", "message": "send code rate limited" }))),
+                ("Global Rate Limited" = (value = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "global rate limited" }))),
+            )
+        ),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
     )
 )]
 async fn send_code(
@@ -48,9 +53,15 @@ async fn send_code(
     request_body = VerifyCodeInput,
     responses(
         (status = 200, body = AuthResponse),
-        (status = 400, body = ErrorResponse, description = "invalid email"),
-        (status = 401, body = ErrorResponse, description = "unauthorized error"),
-        (status = 500, body = ErrorResponse, description = "internal server error"),
+        (status = 400, body = ErrorResponse, 
+            examples(
+                ("Invalid Email" = (value = json!({ "code": "INVALID_EMAIL", "message": "invalid email" }))),
+                ("Invalid Code" = (value = json!({ "code": "INVALID_VERIFICATION_CODE", "message": "invalid verification code" }))),
+            )
+        ),
+        (status = 409, body = ErrorResponse, example = json!({ "code": "EMAIL_ALREADY_IN_USE", "message": "email already in use" })),
+        (status = 429, body = ErrorResponse, example = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "too many requests" })),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
     )
 )]
 async fn verify_code(
@@ -75,9 +86,16 @@ async fn verify_code(
     request_body = UpdateEmailInput,
     responses(
         (status = 200, body = CurrentUserResponse),
-        (status = 400, body = ErrorResponse, description = "invalid email"),
-        (status = 401, body = ErrorResponse, description = "unauthorized error"),
-        (status = 500, body = ErrorResponse, description = "internal server error"),
+        (status = 400, body = ErrorResponse, 
+            examples(
+                ("Invalid Email" = (value = json!({ "code": "INVALID_EMAIL", "message": "invalid email" }))),
+                ("Invalid Code" = (value = json!({ "code": "INVALID_VERIFICATION_CODE", "message": "invalid verification code" }))),
+            )
+        ),
+        (status = 401, body = ErrorResponse, example = json!({ "code": "UNAUTHORIZED", "message": "unauthorized" })),
+        (status = 409, body = ErrorResponse, example = json!({ "code": "EMAIL_ALREADY_IN_USE", "message": "email already in use" })),
+        (status = 429, body = ErrorResponse, example = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "too many requests" })),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
     )
 )]
 async fn update_email(
@@ -106,8 +124,11 @@ async fn update_email(
     request_body = AuthGoogleInput,
     responses(
         (status = 200, body = AuthResponse),
-        (status = 401, body = ErrorResponse, description = "unauthorized error"),
-        (status = 500, body = ErrorResponse, description = "internal server error"),
+        (status = 401, body = ErrorResponse, example = json!({ "code": "INVALID_GOOGLE_TOKEN", "message": "invalid google token" })),
+        (status = 403, body = ErrorResponse, example = json!({ "code": "GOOGLE_EMAIL_NOT_VERIFIED", "message": "google email not verified" })),
+        (status = 409, body = ErrorResponse, example = json!({ "code": "EMAIL_ALREADY_IN_USE", "message": "email already in use" })),
+        (status = 429, body = ErrorResponse, example = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "too many requests" })),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
     )
 )]
 async fn auth_google(
@@ -128,8 +149,9 @@ async fn auth_google(
     request_body = AuthRefreshInput,
     responses(
         (status = 200, body = AuthResponse),
-        (status = 401, body = ErrorResponse, description = "unauthorized error"),
-        (status = 500, body = ErrorResponse, description = "internal server error"),
+        (status = 401, body = ErrorResponse, example = json!({ "code": "INVALID_REFRESH_TOKEN", "message": "invalid refresh token" })),
+        (status = 429, body = ErrorResponse, example = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "too many requests" })),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
     )
 )]
 async fn auth_refresh(
@@ -150,8 +172,8 @@ async fn auth_refresh(
     request_body = LogoutInput,
     responses(
         (status = 204),
-        (status = 401, body = ErrorResponse, description = "unauthorized error"),
-        (status = 500, body = ErrorResponse, description = "internal server error"),
+        (status = 429, body = ErrorResponse, example = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "too many requests" })),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
     )
 )]
 async fn logout(

@@ -18,6 +18,6 @@ pub enum ErrorCode {
     SendCodeRateLimited,
     SessionCreationFailed,
     NoUpdatesProvided,
-    InternalError,
     Unauthorized,
+    InternalError,
 }

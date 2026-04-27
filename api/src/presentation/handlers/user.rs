@@ -6,7 +6,6 @@ use crate::{
     AppState,
     application::{error::AppError, traits::types::CurrentUser},
     domain::{
-        authentication::error::AuthenticationError,
         shared::media_type::MediaType,
         user::{display_name::DisplayName, error::UserError, model::UpdateUserPayload},
     },
@@ -25,22 +24,16 @@ use crate::{
     path = "/",
     responses(
         (status = 200, body = UserAuthDetailResponse),
-        (status = 401, body = ErrorResponse, description = "unauthorized error"),
-        (status = 500, body = ErrorResponse, description = "internal server error"),
+        (status = 401, body = ErrorResponse, example = json!({ "code": "UNAUTHORIZED", "message": "unauthorized" })),
+        (status = 429, body = ErrorResponse, example = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "too many requests" })),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
     )
 )]
 async fn get_me(
     State(state): State<AppState>,
     Extension(current_user): Extension<CurrentUser>,
 ) -> Result<(StatusCode, Json<UserAuthDetailResponse>), AppError> {
-    let result = state
-        .user_service
-        .get_user(current_user.id)
-        .await
-        .map_err(|e| match e {
-            AppError::User(UserError::NotFound) => AuthenticationError::AuthenticationFailed.into(),
-            _ => e,
-        })?;
+    let result = state.user_service.get_user(current_user.id).await?;
     Ok((
         StatusCode::OK,
         Json(UserAuthDetailResponse::from_domain(
@@ -56,9 +49,14 @@ async fn get_me(
     request_body = UserUpdateInput,
     responses(
         (status = 200, body = CurrentUserResponse),
-        (status = 400, body = ErrorResponse, description = "invalid input"),
-        (status = 401, body = ErrorResponse, description = "unauthorized error"),
-        (status = 500, body = ErrorResponse, description = "internal server error"),
+        (status = 400, body = ErrorResponse, 
+            examples(
+                ("Invalid DisplayName" = (value = json!({ "code": "INVALID_DISPLAY_NAME", "message": "invalid display name" }))),
+            )
+        ),
+        (status = 401, body = ErrorResponse, example = json!({ "code": "UNAUTHORIZED", "message": "unauthorized" })),
+        (status = 429, body = ErrorResponse, example = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "too many requests" })),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
     )
 )]
 async fn update_me(
@@ -85,9 +83,10 @@ async fn update_me(
     request_body = UserAvatarUpdateInput,
     responses(
         (status = 200, body = PresignedUriResponse),
-        (status = 400, body = ErrorResponse, description = "invalid input"),
-        (status = 401, body = ErrorResponse, description = "unauthorized error"),
-        (status = 500, body = ErrorResponse, description = "internal server error"),
+        (status = 400, body = ErrorResponse, example = json!({ "code": "INVALID_MEDIA_TYPE", "message": "invalid media type" }) ),
+        (status = 401, body = ErrorResponse, example = json!({ "code": "UNAUTHORIZED", "message": "unauthorized" })),
+        (status = 429, body = ErrorResponse, example = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "too many requests" })),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
     )
 )]
 async fn presigned_uri(
@@ -113,8 +112,9 @@ async fn presigned_uri(
     path = "/avatar",
     responses(
         (status = 200, body = CurrentUserResponse),
-        (status = 401, body = ErrorResponse, description = "unauthorized error"),
-        (status = 500, body = ErrorResponse, description = "internal server error"),
+        (status = 401, body = ErrorResponse, example = json!({ "code": "UNAUTHORIZED", "message": "unauthorized" })),
+        (status = 429, body = ErrorResponse, example = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "too many requests" })),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
     )
 )]
 async fn update_avatar(
