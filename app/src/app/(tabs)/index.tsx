@@ -1,3 +1,4 @@
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Image, Text, View, ScrollView, Pressable } from "react-native";
 
 const POPULAR_SHOWS = [

@@ -13,9 +13,11 @@ import {
 import { client } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
 import { getRefreshToken } from "@/lib/auth-storage";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { queryClient } from "@/lib/query-client";
 
 export default function Account() {
-	const currentUser = useAuthStore((state) => state.currentUser);
+	const { currentUser } = useCurrentUser();
 
 	const zustandLogout = useAuthStore((state) => state.logout);
 

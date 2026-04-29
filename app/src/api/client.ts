@@ -8,6 +8,8 @@ import { useAuthStore } from "@/stores/auth";
 import { paths } from "@/types/schema";
 import createClient, { Middleware } from "openapi-fetch";
 import { router } from "expo-router";
+import { queryClient } from "@/lib/query-client";
+import { isPublicEndpoint } from "@/lib/auth-endpoints";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -22,11 +24,18 @@ const client = createClient<paths>({
 let isRefreshing = false;
 let refreshPromise: Promise<string | null> | null = null;
 
-const requestClones = new WeakMap<Request, Request>();
+const requestBodies = new WeakMap<Request, string>();
 
 const authMiddleware: Middleware = {
 	async onRequest({ request }) {
-		requestClones.set(request, request.clone());
+		console.log(`[API Request] ${request.method} ${request.url}`);
+
+		if (request.method !== "GET" && request.method !== "HEAD") {
+			const clone = request.clone();
+			const body = await clone.text();
+			requestBodies.set(request, body);
+		}
+
 		const token = await getAccessToken();
 		if (token && request.url.startsWith(API_URL)) {
 			request.headers.set("Authorization", `Bearer ${token}`);
@@ -34,7 +43,7 @@ const authMiddleware: Middleware = {
 		return request;
 	},
 	async onResponse({ request, response }) {
-		if (response.status !== 401 || request.url.includes("/auth/")) {
+		if (response.status !== 401 || isPublicEndpoint(request)) {
 			return response;
 		}
 
@@ -54,7 +63,11 @@ const authMiddleware: Middleware = {
 			}
 			const logout = useAuthStore.getState().logout;
 			await logout();
-			router.replace("/welcome");
+
+			queryClient.clear();
+
+			router.replace("/mypage");
+
 			return response;
 		} finally {
 			isRefreshing = false;
@@ -76,7 +89,6 @@ async function refreshAccessToken(): Promise<string | null> {
 
 		await saveAccessToken(data.access_token);
 		await saveRefreshToken(data.refresh_token);
-		useAuthStore.getState().setCurrentUser(data.user);
 
 		return data.access_token;
 	} catch {
@@ -91,19 +103,14 @@ async function executeRetry(
 	const headers = new Headers(originalRequest.headers);
 	headers.set("Authorization", `Bearer ${newToken}`);
 
-	const clone = requestClones.get(originalRequest);
-
-	const canHaveBody =
-		originalRequest.method !== "GET" && originalRequest.method !== "HEAD";
-	const body = canHaveBody && clone ? clone.body : undefined;
-
+	const body = requestBodies.get(originalRequest);
 	const retryRequest = new Request(originalRequest.url, {
 		method: originalRequest.method,
 		headers,
-		body,
+		body: body ?? undefined,
 	});
 
-	requestClones.delete(originalRequest);
+	requestBodies.delete(originalRequest);
 
 	return fetch(retryRequest);
 }

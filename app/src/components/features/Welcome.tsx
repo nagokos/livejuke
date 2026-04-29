@@ -8,35 +8,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import { SendCodeFormValues, sendCodeSchema } from "@/lib/validations/auth";
-import { ErrorCode } from "@/api/error";
-import { useAuthStore } from "@/stores/auth";
-import { client } from "@/api/client";
-import { router } from "expo-router";
-import * as Device from "expo-device";
-import { saveAccessToken, saveRefreshToken } from "@/lib/auth-storage";
 import { X } from "lucide-react-native";
-import {
-	GoogleSignin,
-	isErrorWithCode,
-	isSuccessResponse,
-	statusCodes,
-} from "@react-native-google-signin/google-signin";
-import type { components } from "@/types/schema";
 import { GoogleIcon } from "@/components/icons/google";
-
-type AuthResponse = components["schemas"]["AuthResponse"];
+import { useAuthMutation } from "@/hooks/useAuthMutation";
 
 const RATE_LIMIT_DURATION = 60000;
-
-const getDeviceInfo = () => ({
-	device_name: Device.deviceName ?? null,
-	model_name: Device.modelName ?? null,
-	os: `${Platform.OS} ${Device.osVersion ?? ""}`.trim(),
-});
 
 export default function Welcome() {
 	const [step, setStep] = useState<"email" | "code">("email");
@@ -45,14 +25,16 @@ export default function Welcome() {
 	const [rateLimited, setRateLimited] = useState(false);
 	const [rootError, setRootError] = useState("");
 	const [codeError, setCodeError] = useState("");
-	const [googleError, setGoogleError] = useState(false);
+	const [googleError, setGoogleError] = useState("");
+
+	const { sendCode, verifyCode, authGoogle, isProcessing } = useAuthMutation();
 
 	const {
 		control,
 		handleSubmit,
 		getValues,
 		setError,
-		formState: { errors, isSubmitting },
+		formState: { errors },
 	} = useForm<SendCodeFormValues>({
 		resolver: valibotResolver(sendCodeSchema),
 		defaultValues: { email: "" },
@@ -66,64 +48,40 @@ export default function Welcome() {
 		return () => clearInterval(timer);
 	}, [cooldown]);
 
-	const handleAuthSuccess = useCallback(async (data: AuthResponse) => {
-		await saveAccessToken(data.access_token);
-		await saveRefreshToken(data.refresh_token);
-		useAuthStore.getState().setCurrentUser(data.user);
-		router.replace("/");
-	}, []);
-
-	const sendCode = useCallback(
-		async (email: string) => {
-			setRootError("");
-			const { data, error, response } = await client.POST(
-				"/auth/email/send-code",
-				{ body: { email } },
-			);
-
-			if (error) {
-				const errorCode: ErrorCode = error.code;
+	const onSendCodeSubmit = (values: SendCodeFormValues) => {
+		setRootError("");
+		sendCode.mutate(values, {
+			onSuccess: (data) => {
+				if (!data) return;
+				setCooldown(data.resend_cooldown_seconds);
+				setStep("code");
+			},
+			onError: ({ error }) => {
+				const errorCode = error?.code;
 				switch (errorCode) {
 					case "INVALID_EMAIL":
 						setError("email", {
 							message: "メールアドレスを正しく入力してください",
 						});
 						break;
-					case "RATE_LIMIT_EXCEEDED":
-						if (response.status === 429) {
-							setRateLimited(true);
-							setTimeout(() => setRateLimited(false), RATE_LIMIT_DURATION);
-						}
+					case "SEND_CODE_RATE_LIMITED":
+						setRateLimited(true);
+						setTimeout(() => setRateLimited(false), RATE_LIMIT_DURATION);
+						setRootError("操作が多すぎます。時間をおいて再度お試しください");
+						break;
+					case "GLOBAL_RATE_LIMITED":
+						setRootError("操作が多すぎます。時間をおいて再度お試しください");
+						break;
+					default:
 						setRootError(
 							"エラーが発生しました。時間をおいて再度お試しください",
 						);
-						break;
 				}
-				return null;
-			}
+			},
+		});
+	};
 
-			return data;
-		},
-		[setError],
-	);
-
-	const onSendCode = useCallback(
-		async (values: SendCodeFormValues) => {
-			const data = await sendCode(values.email);
-			if (!data) return;
-			setCooldown(data.resend_cooldown_seconds);
-			setStep("code");
-		},
-		[sendCode],
-	);
-
-	const onResend = useCallback(async () => {
-		const data = await sendCode(getValues("email"));
-		if (!data) return;
-		setCooldown(data.resend_cooldown_seconds);
-	}, [sendCode, getValues]);
-
-	const onVerifyCode = useCallback(async () => {
+	const onVerifyCodeSubmit = () => {
 		if (!code) {
 			setCodeError("認証コードを入力してください");
 			return;
@@ -131,101 +89,79 @@ export default function Welcome() {
 		setCodeError("");
 		setRootError("");
 
-		const email = getValues("email");
-		const { data, error } = await client.POST("/auth/email/verify-code", {
-			body: {
-				email,
-				code,
-				device_info: getDeviceInfo(),
-			},
-		});
-
-		if (error) {
-			const errorCode: ErrorCode = error.code;
-			switch (errorCode) {
-				case "INVALID_EMAIL":
-					setError("email", {
-						message: "メールアドレスを正しく入力してください",
-					});
-					break;
-				case "INVALID_VERIFICATION_CODE":
-					setCodeError("認証コードが正しくありません");
-					break;
-				case "EMAIL_ALREADY_IN_USE":
-					setRootError(
-						"このメールアドレスは既に別の方法で登録されています。別のログイン方法でログイン後、アカウント設定からリンクできます。",
-					);
-					break;
-				case "RATE_LIMIT_EXCEEDED":
-					setRootError("操作が多すぎます。時間をおいて再度お試しください");
-					break;
-				default:
-					setRootError("エラーが発生しました。時間をおいて再度お試しください");
-			}
-			return;
-		}
-
-		await handleAuthSuccess(data);
-	}, [code, getValues, setError, handleAuthSuccess]);
-
-	const onGoogleLogin = useCallback(async () => {
-		setGoogleError(false);
-		try {
-			const response = await GoogleSignin.signIn();
-			if (!isSuccessResponse(response)) return;
-
-			const idToken = response.data.idToken;
-			if (!idToken) {
-				setGoogleError(true);
-				return;
-			}
-
-			const { data, error } = await client.POST("/auth/google", {
-				body: {
-					id_token: idToken,
-					device_info: getDeviceInfo(),
-				},
-			});
-
-			if (error) {
-				if (error) {
-					const errorCode: ErrorCode = error.code;
+		verifyCode.mutate(
+			{ email: getValues("email"), code },
+			{
+				onError: ({ error }) => {
+					const errorCode = error?.code;
 					switch (errorCode) {
+						case "INVALID_EMAIL":
+							setError("email", {
+								message: "メールアドレスを正しく入力してください",
+							});
+							break;
+						case "INVALID_VERIFICATION_CODE":
+							setCodeError("認証コードが正しくありません");
+							break;
 						case "EMAIL_ALREADY_IN_USE":
 							setRootError(
 								"このメールアドレスは既に別の方法で登録されています。別のログイン方法でログイン後、アカウント設定からリンクできます。",
 							);
+							break;
+						case "GLOBAL_RATE_LIMITED":
+							setRootError("操作が多すぎます。時間をおいて再度お試しください");
 							break;
 						default:
 							setRootError(
 								"エラーが発生しました。時間をおいて再度お試しください",
 							);
 					}
-					return;
+				},
+			},
+		);
+	};
+
+	const onAuthGoogleSubmit = () => {
+		setGoogleError("");
+
+		authGoogle.mutate(undefined, {
+			onError: ({ error }) => {
+				const errorCode = error?.code;
+				switch (errorCode) {
+					case "GOOGLE_AUTH_CANCELLED":
+						return;
+					case "GOOGLE_EMAIL_NOT_VERIFIED":
+						setGoogleError("Googleのメールアドレスを認証してください");
+						break;
+					case "INVALID_GOOGLE_TOKEN":
+						setGoogleError("エラーが発生しました。再度お試しください");
+						break;
+					case "EMAIL_ALREADY_IN_USE":
+						setRootError(
+							"このメールアドレスは既に別の方法で登録されています。別のログイン方法でログイン後、アカウント設定からリンクできます。",
+						);
+						break;
+					case "GLOBAL_RATE_LIMITED":
+						setRootError("操作が多すぎます。時間をおいて再度お試しください");
+						break;
+					default:
+						setRootError(
+							"エラーが発生しました。時間をおいて再度お試しください",
+						);
 				}
-				setGoogleError(true);
-				return;
-			}
+			},
+		});
+	};
 
-			await handleAuthSuccess(data);
-		} catch (error) {
-			if (
-				isErrorWithCode(error) &&
-				error.code === statusCodes.SIGN_IN_CANCELLED
-			) {
-				return;
-			}
-			setGoogleError(true);
-		}
-	}, [handleAuthSuccess]);
-
-	const resetToEmail = useCallback((onChange: (value: string) => void) => {
+	const resetToEmail = (onChange: (value: string) => void) => {
 		onChange("");
 		setCode("");
 		setStep("email");
 		setRootError("");
 		setCodeError("");
-	}, []);
+		sendCode.reset();
+		verifyCode.reset();
+	};
 
 	return (
 		<KeyboardAvoidingView
@@ -244,20 +180,19 @@ export default function Welcome() {
 				</Text>
 
 				<Button
-					onPress={onGoogleLogin}
+					onPress={onAuthGoogleSubmit}
 					variant="outline"
 					className="mt-8 h-12 w-full rounded-xl active:bg-gray-50"
+					disabled={isProcessing}
 				>
 					<GoogleIcon />
 					<Text className="text-base font-medium text-foreground">
-						Googleで続ける
+						{isProcessing ? "読み込み中..." : "Googleで続ける"}
 					</Text>
 				</Button>
-				{googleError && (
+				{googleError !== "" && (
 					<View className="items-center mt-2">
-						<Text className="text-sm text-red-500">
-							エラーが発生しました。再度お試しください
-						</Text>
+						<Text className="text-sm text-red-500">{googleError}</Text>
 					</View>
 				)}
 
@@ -328,12 +263,16 @@ export default function Welcome() {
 				</View>
 
 				<Button
-					onPress={handleSubmit(step === "email" ? onSendCode : onVerifyCode)}
+					onPress={
+						step === "email"
+							? handleSubmit(onSendCodeSubmit)
+							: onVerifyCodeSubmit
+					}
 					className="mt-10 h-12 w-full rounded-xl bg-main active:opacity-80"
-					disabled={isSubmitting || rateLimited}
+					disabled={isProcessing || rateLimited}
 				>
 					<Text className="font-bold">
-						{isSubmitting
+						{isProcessing
 							? step === "email"
 								? "送信中..."
 								: "確認中..."
@@ -351,8 +290,8 @@ export default function Welcome() {
 							</Text>
 						) : (
 							<Button
-								onPress={onResend}
-								disabled={rateLimited}
+								onPress={() => onSendCodeSubmit({ email: getValues("email") })}
+								disabled={isProcessing || rateLimited}
 								size="sm"
 								variant="ghost"
 								className="rounded-xl active:bg-main/10"

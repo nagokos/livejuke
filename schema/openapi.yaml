@@ -23,23 +23,56 @@ paths:
               schema:
                 $ref: '#/components/schemas/CurrentUserResponse'
         "400":
-          description: invalid email
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Invalid Code:
+                  value:
+                    code: INVALID_VERIFICATION_CODE
+                    message: invalid verification code
+                Invalid Email:
+                  value:
+                    code: INVALID_EMAIL
+                    message: invalid email
         "401":
-          description: unauthorized error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHORIZED
+                message: unauthorized
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: EMAIL_ALREADY_IN_USE
+                message: email already in use
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GLOBAL_RATE_LIMITED
+                message: too many requests
         "500":
-          description: internal server error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
   /auth/email/send-code:
     post:
       operationId: send_code
@@ -57,23 +90,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/SendCodeResponse'
         "400":
-          description: invalid email
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_EMAIL
+                message: invalid email
         "429":
-          description: too many request
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Global Rate Limited:
+                  value:
+                    code: GLOBAL_RATE_LIMITED
+                    message: global rate limited
+                Send Code Rate Limited:
+                  value:
+                    code: SEND_CODE_RATE_LIMITED
+                    message: send code rate limited
         "500":
-          description: internal server error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
   /auth/email/verify-code:
     post:
       operationId: verify_code
@@ -91,23 +139,47 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
         "400":
-          description: invalid email
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        "401":
-          description: unauthorized error
+              examples:
+                Invalid Code:
+                  value:
+                    code: INVALID_VERIFICATION_CODE
+                    message: invalid verification code
+                Invalid Email:
+                  value:
+                    code: INVALID_EMAIL
+                    message: invalid email
+        "409":
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: EMAIL_ALREADY_IN_USE
+                message: email already in use
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GLOBAL_RATE_LIMITED
+                message: too many requests
         "500":
-          description: internal server error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
   /auth/google:
     post:
       operationId: auth_google
@@ -125,17 +197,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
         "401":
-          description: unauthorized error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_GOOGLE_TOKEN
+                message: invalid google token
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GOOGLE_EMAIL_NOT_VERIFIED
+                message: google email not verified
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: EMAIL_ALREADY_IN_USE
+                message: email already in use
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GLOBAL_RATE_LIMITED
+                message: too many requests
         "500":
-          description: internal server error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
   /auth/logout:
     post:
       operationId: logout
@@ -148,18 +253,24 @@ paths:
       responses:
         "204":
           description: ""
-        "401":
-          description: unauthorized error
+        "429":
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GLOBAL_RATE_LIMITED
+                message: too many requests
         "500":
-          description: internal server error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
   /auth/refresh:
     post:
       operationId: auth_refresh
@@ -177,17 +288,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
         "401":
-          description: unauthorized error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_REFRESH_TOKEN
+                message: invalid refresh token
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GLOBAL_RATE_LIMITED
+                message: too many requests
         "500":
-          description: internal server error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
   /me:
     get:
       operationId: get_me
@@ -199,17 +325,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserAuthDetailResponse'
         "401":
-          description: unauthorized error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHORIZED
+                message: unauthorized
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GLOBAL_RATE_LIMITED
+                message: too many requests
         "500":
-          description: internal server error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
     patch:
       operationId: update_me
       requestBody:
@@ -226,23 +367,43 @@ paths:
               schema:
                 $ref: '#/components/schemas/CurrentUserResponse'
         "400":
-          description: invalid input
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Invalid DisplayName:
+                  value:
+                    code: INVALID_DISPLAY_NAME
+                    message: invalid display name
         "401":
-          description: unauthorized error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHORIZED
+                message: unauthorized
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GLOBAL_RATE_LIMITED
+                message: too many requests
         "500":
-          description: internal server error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
   /me/avatar:
     patch:
       operationId: update_avatar
@@ -254,17 +415,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/CurrentUserResponse'
         "401":
-          description: unauthorized error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHORIZED
+                message: unauthorized
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GLOBAL_RATE_LIMITED
+                message: too many requests
         "500":
-          description: internal server error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
   /me/avatar/presigned_uri:
     post:
       operationId: presigned_uri
@@ -282,23 +458,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/PresignedUriResponse'
         "400":
-          description: invalid input
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_MEDIA_TYPE
+                message: invalid media type
         "401":
-          description: unauthorized error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHORIZED
+                message: unauthorized
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GLOBAL_RATE_LIMITED
+                message: too many requests
         "500":
-          description: internal server error
+          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
 components:
   schemas:
     AuthGoogleInput:
@@ -383,14 +577,16 @@ components:
         - INVALID_ACCESS_TOKEN
         - INVALID_REFRESH_TOKEN
         - INVALID_MEDIA_TYPE
+        - INVALID_GOOGLE_TOKEN
+        - GOOGLE_EMAIL_NOT_VERIFIED
         - EMAIL_ALREADY_IN_USE
         - USER_NOT_FOUND
         - GLOBAL_RATE_LIMITED
         - SEND_CODE_RATE_LIMITED
         - SESSION_CREATION_FAILED
         - NO_UPDATES_PROVIDED
-        - INTERNAL_ERROR
         - UNAUTHORIZED
+        - INTERNAL_ERROR
     ErrorResponse:
       type: object
       required:

@@ -1,20 +1,18 @@
 import { View, Text, TextInput, Pressable } from "react-native";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
-import { client } from "@/api/client";
-import { ErrorCode } from "@/api/error";
 import { Controller, useForm } from "react-hook-form";
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import { SendCodeFormValues, sendCodeSchema } from "@/lib/validations/auth";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react-native";
-import { useAuthStore } from "@/stores/auth";
-import { router } from "expo-router";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useAuthMutation } from "@/hooks/useAuthMutation";
 
 const RATE_LIMIT_DURATION = 60000;
 
 export default function EmailEdit() {
-	const currentUser = useAuthStore((state) => state.currentUser);
+	const { currentUser } = useCurrentUser();
 
 	const [step, setStep] = useState<"email" | "code">("email");
 	const [code, setCode] = useState("");
@@ -22,6 +20,7 @@ export default function EmailEdit() {
 	const [rateLimited, setRateLimited] = useState(false);
 	const [rootError, setRootError] = useState("");
 	const [codeError, setCodeError] = useState("");
+	const { sendCode, upsertEmail, isProcessing } = useAuthMutation();
 
 	useEffect(() => {
 		if (cooldown <= 0) return;
@@ -43,57 +42,40 @@ export default function EmailEdit() {
 		defaultValues: { email: "" },
 	});
 
-	const sendCode = useCallback(
-		async (email: string) => {
-			setRootError("");
-			const { data, error, response } = await client.POST(
-				"/auth/email/send-code",
-				{ body: { email } },
-			);
-
-			if (error) {
-				const errorCode: ErrorCode = error.code;
+	const onSendCodeSubmit = (values: SendCodeFormValues) => {
+		setRootError("");
+		sendCode.mutate(values, {
+			onSuccess: (data) => {
+				if (!data) return;
+				setCooldown(data.resend_cooldown_seconds);
+				setStep("code");
+			},
+			onError: ({ error }) => {
+				const errorCode = error?.code;
 				switch (errorCode) {
 					case "INVALID_EMAIL":
 						setError("email", {
 							message: "メールアドレスを正しく入力してください",
 						});
 						break;
-					case "RATE_LIMIT_EXCEEDED":
-						if (response.status === 429) {
-							setRateLimited(true);
-							setTimeout(() => setRateLimited(false), RATE_LIMIT_DURATION);
-						}
+					case "SEND_CODE_RATE_LIMITED":
+						setRateLimited(true);
+						setTimeout(() => setRateLimited(false), RATE_LIMIT_DURATION);
+						setRootError("操作が多すぎます。時間をおいて再度お試しください");
+						break;
+					case "GLOBAL_RATE_LIMITED":
+						setRootError("操作が多すぎます。時間をおいて再度お試しください");
+						break;
+					default:
 						setRootError(
 							"エラーが発生しました。時間をおいて再度お試しください",
 						);
-						break;
 				}
-				return null;
-			}
+			},
+		});
+	};
 
-			return data;
-		},
-		[setError],
-	);
-
-	const onSendCode = useCallback(
-		async (values: SendCodeFormValues) => {
-			const data = await sendCode(values.email);
-			if (!data) return;
-			setCooldown(data.resend_cooldown_seconds);
-			setStep("code");
-		},
-		[sendCode],
-	);
-
-	const onResend = useCallback(async () => {
-		const data = await sendCode(getValues("email"));
-		if (!data) return;
-		setCooldown(data.resend_cooldown_seconds);
-	}, [sendCode, getValues]);
-
-	const onChangeEmail = useCallback(async () => {
+	const onUpsertEmail = () => {
 		if (!code) {
 			setCodeError("認証コードを入力してください");
 			return;
@@ -101,41 +83,45 @@ export default function EmailEdit() {
 		setCodeError("");
 		setRootError("");
 
-		const email = getValues("email");
-		const { data, error } = await client.PATCH("/auth/email", {
-			body: {
-				email,
-				code,
+		upsertEmail.mutate(
+			{ email: getValues("email"), code },
+			{
+				onError: ({ error }) => {
+					console.log(error);
+					const errorCode = error?.code;
+					switch (errorCode) {
+						case "INVALID_EMAIL":
+							setError("email", {
+								message: "メールアドレスを正しく入力してください",
+							});
+							break;
+						case "INVALID_VERIFICATION_CODE":
+							setCodeError("認証コードが正しくありません");
+							break;
+						case "EMAIL_ALREADY_IN_USE":
+							setRootError(
+								"このメールアドレスは既に別の方法で登録されています。別のログイン方法でログイン後、アカウント設定からリンクできます。",
+							);
+							break;
+						case "GLOBAL_RATE_LIMITED":
+							setRootError("操作が多すぎます。時間をおいて再度お試しください");
+							break;
+						default:
+							setRootError(
+								"エラーが発生しました。時間をおいて再度お試しください",
+							);
+					}
+				},
+				onSuccess: () => {
+					setValue("email", "");
+					setCode("");
+					setStep("email");
+					setRootError("");
+					setCodeError("");
+				},
 			},
-		});
-
-		if (error) {
-			const errorCode: ErrorCode = error.code;
-			switch (errorCode) {
-				case "INVALID_EMAIL":
-					setError("email", {
-						message: "メールアドレスを正しく入力してください",
-					});
-					break;
-				case "INVALID_VERIFICATION_CODE":
-					setCodeError("認証コードが正しくありません");
-					break;
-				case "RATE_LIMIT_EXCEEDED":
-					setRootError("操作が多すぎます。時間をおいて再度お試しください");
-					break;
-				default:
-					setRootError("エラーが発生しました。時間をおいて再度お試しください");
-			}
-			return;
-		}
-
-		useAuthStore.getState().setCurrentUser(data);
-		setValue("email", "");
-		setCode("");
-		setStep("email");
-		setRootError("");
-		setCodeError("");
-	}, [code, getValues, setError]);
+		);
+	};
 
 	const resetToEmail = useCallback((onChange: (value: string) => void) => {
 		onChange("");
@@ -148,6 +134,11 @@ export default function EmailEdit() {
 	return (
 		<View className="flex-1 bg-white px-6 justify-between">
 			<View className="mt-10 gap-6">
+				{rootError !== "" && (
+					<View>
+						<Text className="text-base text-red-500">{rootError}</Text>
+					</View>
+				)}
 				<View className="gap-1">
 					<Text className="text-sm text-gray-500">現在のメールアドレス</Text>
 					<Text className="text-lg font-medium">{currentUser?.email}</Text>
@@ -216,9 +207,11 @@ export default function EmailEdit() {
 
 			<View className="mb-10">
 				<Button
-					onPress={handleSubmit(step === "email" ? onSendCode : onChangeEmail)}
+					onPress={handleSubmit(
+						step === "email" ? onSendCodeSubmit : onUpsertEmail,
+					)}
 					className="h-12 w-full rounded-xl bg-main active:opacity-80"
-					disabled={isSubmitting || rateLimited}
+					disabled={isProcessing || rateLimited}
 				>
 					<Text className="font-bold text-white">
 						{isSubmitting
@@ -239,8 +232,8 @@ export default function EmailEdit() {
 							</Text>
 						) : (
 							<Button
-								onPress={onResend}
-								disabled={rateLimited}
+								onPress={() => onSendCodeSubmit}
+								disabled={isProcessing || rateLimited}
 								size="sm"
 								variant="ghost"
 								className="rounded-xl active:bg-main/10"

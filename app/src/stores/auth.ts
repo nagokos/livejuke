@@ -1,24 +1,17 @@
 import { create } from "zustand";
-import type { components } from "@/types/schema";
 import { clearAuth } from "@/lib/auth-storage";
-
-type CurrentUser = components["schemas"]["CurrentUserResponse"];
+import { queryClient } from "@/lib/query-client";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 interface AuthState {
-	currentUser: CurrentUser | null;
-	isReady: boolean;
-	setCurrentUser: (user: CurrentUser) => void;
-	setReady: () => void;
+	hasToken: boolean;
+	setHasToken: () => void;
 	logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-	currentUser: null,
-	isReady: false,
-
-	setCurrentUser: (user: CurrentUser) =>
-		set({ currentUser: user, isReady: true }),
-	setReady: () => set({ isReady: true }),
+	hasToken: false,
+	setHasToken: () => set({ hasToken: true }),
 
 	logout: async () => {
 		try {
@@ -26,9 +19,13 @@ export const useAuthStore = create<AuthState>((set) => ({
 		} catch (error) {
 			console.error("トークンの削除に失敗しました:", error);
 		} finally {
-			set({ currentUser: null });
+			queryClient.clear();
+			set({ hasToken: false });
 		}
 	},
 }));
 
-export const useIsLoggedIn = () => useAuthStore((state) => !!state.currentUser);
+export const useIsLoggedIn = () => {
+	const { currentUser, isSuccess } = useCurrentUser();
+	return { isLoggedIn: !!currentUser, isSuccess };
+};

@@ -8,10 +8,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { router } from "expo-router";
 import { Image } from "expo-image";
-import { useAuthStore } from "@/stores/auth";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function Settings() {
-	const current_user = useAuthStore((state) => state.currentUser);
+	const { currentUser } = useCurrentUser();
 
 	return (
 		<View className="flex-1 bg-white">
@@ -23,7 +23,7 @@ export default function Settings() {
 					<View className="w-10 items-center justify-center">
 						<Avatar className="size-12" alt="user avatar">
 							<AvatarImage
-								source={{ uri: current_user?.avatar_url ?? undefined }}
+								source={{ uri: currentUser?.avatar_url ?? undefined }}
 							/>
 							<AvatarFallback className="bg-transparent">
 								<Image
