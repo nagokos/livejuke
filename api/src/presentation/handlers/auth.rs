@@ -23,7 +23,7 @@ use utoipa_axum::routes;
     responses(
         (status = 200, body = SendCodeResponse),
         (status = 400, body = ErrorResponse, example = json!({ "code": "INVALID_EMAIL", "message": "invalid email" })),
-        (status = 429, body = ErrorResponse, 
+        (status = 429, body = ErrorResponse,
             examples(
                 ("Send Code Rate Limited" = (value = json!({ "code": "SEND_CODE_RATE_LIMITED", "message": "send code rate limited" }))),
                 ("Global Rate Limited" = (value = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "global rate limited" }))),
@@ -53,7 +53,7 @@ async fn send_code(
     request_body = VerifyCodeInput,
     responses(
         (status = 200, body = AuthResponse),
-        (status = 400, body = ErrorResponse, 
+        (status = 400, body = ErrorResponse,
             examples(
                 ("Invalid Email" = (value = json!({ "code": "INVALID_EMAIL", "message": "invalid email" }))),
                 ("Invalid Code" = (value = json!({ "code": "INVALID_VERIFICATION_CODE", "message": "invalid verification code" }))),
@@ -86,7 +86,7 @@ async fn verify_code(
     request_body = UpdateEmailInput,
     responses(
         (status = 200, body = CurrentUserResponse),
-        (status = 400, body = ErrorResponse, 
+        (status = 400, body = ErrorResponse,
             examples(
                 ("Invalid Email" = (value = json!({ "code": "INVALID_EMAIL", "message": "invalid email" }))),
                 ("Invalid Code" = (value = json!({ "code": "INVALID_VERIFICATION_CODE", "message": "invalid verification code" }))),

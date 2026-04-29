@@ -7,4 +7,5 @@ pub trait ObjectStore: Send + Sync {
         key: String,
         media_type: &str,
     ) -> Result<String, anyhow::Error>;
+    async fn remove_object(&self, key: String) -> Result<(), anyhow::Error>;
 }

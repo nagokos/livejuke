@@ -59,13 +59,29 @@ impl UserService {
         Ok(presigned_uri)
     }
     pub async fn update_avatar(&self, user_id: Id<User>) -> Result<User, AppError> {
-        let avatar_key = self
+        let old_key = self
+            .user_repo
+            .find_by_id(user_id)
+            .await?
+            .ok_or(UserError::NotFound)?
+            .avatar_key;
+
+        let key = self
             .upload_session_store
             .get_pending_upload(user_id)
             .await?;
 
-        let payload = UpdateUserPayload::default().avatar_key(avatar_key);
+        let payload = UpdateUserPayload::default().avatar_key(key);
         let user = self.user_repo.update(user_id, payload).await?;
+
+        if let Some(old_key) = old_key
+            && let Err(e) = self
+                .object_store
+                .remove_object(format!("avatars/{}", old_key))
+                .await
+        {
+            tracing::error!(error = %e, "failed to remove s3 object {}", old_key);
+        };
 
         Ok(user)
     }

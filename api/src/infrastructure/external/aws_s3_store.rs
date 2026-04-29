@@ -48,4 +48,14 @@ impl ObjectStore for AwsS3Store {
 
         Ok(presigned_request.uri().into())
     }
+    async fn remove_object(&self, key: String) -> Result<(), anyhow::Error> {
+        self.client
+            .delete_object()
+            .bucket(&self.bucket)
+            .key(key)
+            .send()
+            .await?;
+
+        Ok(())
+    }
 }
