@@ -49,7 +49,7 @@ async fn get_me(
     request_body = UserUpdateInput,
     responses(
         (status = 200, body = CurrentUserResponse),
-        (status = 400, body = ErrorResponse, 
+        (status = 400, body = ErrorResponse,
             examples(
                 ("Invalid DisplayName" = (value = json!({ "code": "INVALID_DISPLAY_NAME", "message": "invalid display name" }))),
             )
