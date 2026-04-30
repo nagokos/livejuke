@@ -39,7 +39,7 @@ export default function Settings() {
 					</View>
 				</Pressable>
 			</View>
-			<View className="mt-10 mx-5 gap-10">
+			<View className="mt-10 mx-5 gap-14">
 				<Pressable
 					className="flex-row items-center "
 					onPress={() => router.push("/account")}

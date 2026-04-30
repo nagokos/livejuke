@@ -22,6 +22,20 @@ impl IntoResponse for AuthenticationError {
                     message: self.to_string(),
                 },
             ),
+            Self::EmailAuthenticationRequired => (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                ErrorResponse {
+                    code: ErrorCode::EmailAuthenticationRequired,
+                    message: self.to_string(),
+                },
+            ),
+            Self::GoogleAccountAlreadyInUse => (
+                StatusCode::CONFLICT,
+                ErrorResponse {
+                    code: ErrorCode::GoogleAccountAlreadyInUse,
+                    message: self.to_string(),
+                },
+            ),
             Self::InvalidVerificationCode => (
                 StatusCode::UNAUTHORIZED,
                 ErrorResponse {

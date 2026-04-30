@@ -226,6 +226,51 @@ impl AuthService {
             refresh_token,
         })
     }
+    pub async fn auth_google_link(
+        &self,
+        user_id: Id<User>,
+        id_token: String,
+    ) -> Result<(), AppError> {
+        let user_info = self.providers.id_token_verifier.verify(&id_token).await?;
+        if self
+            .repos
+            .auth_repo
+            .find_by_user_id_provider(user_id, Provider::Google)
+            .await?
+            .is_some()
+        {
+            return Ok(());
+        };
+
+        if self
+            .repos
+            .auth_repo
+            .find_by_provider_uid(Provider::Google, &user_info.sub)
+            .await?
+            .is_some()
+        {
+            return Err(AuthenticationError::GoogleAccountAlreadyInUse.into());
+        }
+
+        let payload = AuthenticationPayload::new(Provider::Google, &user_info.sub);
+        self.repos.auth_repo.create(user_id, payload).await?;
+        Ok(())
+    }
+    pub async fn auth_google_unlink(&self, user_id: Id<User>) -> Result<(), AppError> {
+        if self
+            .repos
+            .auth_repo
+            .find_by_user_id_provider(user_id, Provider::Email)
+            .await?
+            .is_none()
+        {
+            return Err(AuthenticationError::EmailAuthenticationRequired.into());
+        }
+
+        self.repos.auth_repo.delete_google(user_id).await?;
+
+        Ok(())
+    }
     pub async fn upsert_email(
         &self,
         user_id: Id<User>,

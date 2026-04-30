@@ -3,8 +3,8 @@ use crate::domain::authentication::email::Email;
 use crate::domain::authentication::error::AuthenticationError;
 use crate::presentation::error::ErrorResponse;
 use crate::presentation::request::auth::{
-    AuthGoogleInput, AuthRefreshInput, LogoutInput, SendCodeInput, UpdateEmailInput,
-    VerifyCodeInput,
+    AuthGoogleInput, AuthRefreshInput, LinkGoogleInput, LogoutInput, SendCodeInput,
+    UpdateEmailInput, VerifyCodeInput,
 };
 use crate::presentation::response::user_response::CurrentUserResponse;
 use crate::presentation::response::verification_code_response::SendCodeResponse;
@@ -145,6 +145,54 @@ async fn auth_google(
 
 #[utoipa::path(
     post,
+    path = "/google/link",
+    request_body = LinkGoogleInput,
+    responses(
+        (status = 204),
+        (status = 401, body = ErrorResponse, example = json!({ "code": "INVALID_GOOGLE_TOKEN", "message": "invalid google token" })),
+        (status = 403, body = ErrorResponse, example = json!({ "code": "GOOGLE_EMAIL_NOT_VERIFIED", "message": "google email not verified" })),
+        (status = 409, body = ErrorResponse, example = json!({ "code": "GOOGLE_ACCOUNT_ALREADY_IN_USE", "message": "google account already in use" })),
+        (status = 429, body = ErrorResponse, example = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "too many requests" })),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
+    )
+)]
+async fn auth_google_link(
+    State(state): State<AppState>,
+    Extension(current_user): Extension<CurrentUser>,
+    Json(input): Json<LinkGoogleInput>,
+) -> Result<StatusCode, AppError> {
+    state
+        .auth_service
+        .auth_google_link(current_user.id, input.id_token)
+        .await?;
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+#[utoipa::path(
+    delete,
+    path = "/google/link",
+    responses(
+        (status = 204),
+        (status = 422, body = ErrorResponse, example = json!({ "code": "EMAIL_AUTHENTICATION_REQUIRED", "message": "email authentication is requiered before unlinkng google" })),
+        (status = 429, body = ErrorResponse, example = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "too many requests" })),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
+    )
+)]
+async fn auth_google_unlink(
+    State(state): State<AppState>,
+    Extension(current_user): Extension<CurrentUser>,
+) -> Result<StatusCode, AppError> {
+    state
+        .auth_service
+        .auth_google_unlink(current_user.id)
+        .await?;
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+#[utoipa::path(
+    post,
     path = "/refresh",
     request_body = AuthRefreshInput,
     responses(
@@ -198,5 +246,8 @@ pub fn create_public_auth_router() -> OpenApiRouter<AppState> {
 }
 
 pub fn create_private_auth_router() -> OpenApiRouter<AppState> {
-    OpenApiRouter::new().routes(routes!(update_email))
+    OpenApiRouter::new()
+        .routes(routes!(update_email))
+        .routes(routes!(auth_google_link))
+        .routes(routes!(auth_google_unlink))
 }

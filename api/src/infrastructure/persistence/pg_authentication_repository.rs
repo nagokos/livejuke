@@ -26,6 +26,35 @@ impl PgAuthenticationRepository {
 
 #[async_trait]
 impl AuthRepository for PgAuthenticationRepository {
+    async fn create(
+        &self,
+        user_id: Id<User>,
+        authentication: AuthenticationPayload,
+    ) -> Result<Authentication, anyhow::Error> {
+        let sql = r#"
+            INSERT INTO authentications (
+                user_id, 
+                provider, 
+                uid
+            )
+            VALUES ($1, $2, $3)
+            RETURNING 
+                id,
+                user_id,
+                provider,
+                uid,
+                created_at,
+                updated_at
+        "#;
+        let authentication = sqlx::query_as::<_, AuthenticationRow>(sql)
+            .bind(user_id.get())
+            .bind(authentication.provider.as_str())
+            .bind(&authentication.uid)
+            .fetch_one(&self.pool)
+            .await?
+            .try_into()?;
+        Ok(authentication)
+    }
     async fn create_user_with_authentication(
         &self,
         user: UserPayload,
@@ -128,7 +157,15 @@ impl AuthRepository for PgAuthenticationRepository {
         uid: &str,
     ) -> Result<Option<Authentication>, anyhow::Error> {
         let sql = r#"
-                SELECT * FROM authentications WHERE provider = $1 AND uid = $2;
+                SELECT 
+                    id,
+                    user_id,
+                    provider,
+                    uid,
+                    created_at,
+                    updated_at
+                FROM authentications 
+                WHERE provider = $1 AND uid = $2;
             "#;
         sqlx::query_as::<_, AuthenticationRow>(sql)
             .bind(provider.as_str())
@@ -137,6 +174,42 @@ impl AuthRepository for PgAuthenticationRepository {
             .await?
             .map(Authentication::try_from)
             .transpose()
+    }
+    async fn find_by_user_id_provider(
+        &self,
+        user_id: Id<User>,
+        provider: Provider,
+    ) -> Result<Option<Authentication>, anyhow::Error> {
+        let sql = r#"
+            SELECT 
+                id,
+                user_id,
+                provider,
+                uid,
+                created_at,
+                updated_at
+            FROM authentications 
+            WHERE user_id = $1 AND provider = $2;
+        "#;
+        sqlx::query_as::<_, AuthenticationRow>(sql)
+            .bind(user_id.get())
+            .bind(provider.as_str())
+            .fetch_optional(&self.pool)
+            .await?
+            .map(Authentication::try_from)
+            .transpose()
+    }
+    async fn delete_google(&self, user_id: Id<User>) -> Result<(), anyhow::Error> {
+        let sql = r#"
+            DELETE from authentications 
+            WHERE user_id = $1 AND provider = $2
+        "#;
+        sqlx::query(sql)
+            .bind(user_id.get())
+            .bind(Provider::Google.as_str())
+            .execute(&self.pool)
+            .await?;
+        Ok(())
     }
 }
 
