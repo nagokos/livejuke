@@ -7,12 +7,12 @@ import { Controller, useForm } from "react-hook-form";
 import { UpdateUserFormValues, updateUserSchema } from "@/lib/validations/user";
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useUserUpdateMutation } from "@/hooks/useUserUpdateMutation";
+import { useUserMutation } from "@/hooks/useUserMutation";
 
 export default function ProfileEdit() {
 	const { currentUser } = useCurrentUser();
 	const [rootError, setRootError] = useState("");
-	const { updateUser, updateAvatar, isProcessing } = useUserUpdateMutation();
+	const { updateUser, updateAvatar, isProcessing } = useUserMutation();
 
 	const {
 		control,
@@ -97,7 +97,7 @@ export default function ProfileEdit() {
 								/>
 							</AvatarFallback>
 						</Avatar>
-						<Text className="text-gray-400 text-sm font-medium text-center">
+						<Text className="text-gray-400 mt-1 text-sm font-medium text-center">
 							変更する
 						</Text>
 					</Pressable>

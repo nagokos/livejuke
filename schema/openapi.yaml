@@ -440,6 +440,57 @@ paths:
               example:
                 code: INTERNAL_ERROR
                 message: internal server error
+    delete:
+      operationId: delete_user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDeleteInput'
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDeleteInput'
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_VERIFICATION_CODE
+                message: invalid verification code
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHORIZED
+                message: unauthorized
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: GLOBAL_RATE_LIMITED
+                message: too many requests
+        "500":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
     patch:
       operationId: update_me
       requestBody:
@@ -573,6 +624,49 @@ paths:
               example:
                 code: GLOBAL_RATE_LIMITED
                 message: too many requests
+        "500":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: internal server error
+  /me/send-code:
+    post:
+      operationId: send_deletion_code
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendCodeResponse'
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHORIZED
+                message: unauthorized
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Global Rate Limited:
+                  value:
+                    code: GLOBAL_RATE_LIMITED
+                    message: global rate limited
+                Send Code Rate Limited:
+                  value:
+                    code: SEND_CODE_RATE_LIMITED
+                    message: send code rate limited
         "500":
           description: ""
           content:
@@ -751,6 +845,13 @@ components:
         - media_type
       properties:
         media_type:
+          type: string
+    UserDeleteInput:
+      type: object
+      required:
+        - code
+      properties:
+        code:
           type: string
     UserUpdateInput:
       type: object

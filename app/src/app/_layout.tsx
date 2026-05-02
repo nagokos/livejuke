@@ -71,6 +71,12 @@ export default function RootLayout() {
 							title: "メールアドレス",
 						}}
 					/>
+					<Stack.Screen
+						name="account/delete"
+						options={{
+							title: "アカウント削除",
+						}}
+					/>
 				</Stack>
 
 				<PortalHost />

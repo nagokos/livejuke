@@ -1,4 +1,5 @@
 import { client } from "@/api/client";
+import { useAuthStore } from "@/stores/auth";
 import { AppErrorWithResponse } from "@/types/api";
 import { components } from "@/types/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -6,9 +7,12 @@ import * as ImagePicker from "expo-image-picker";
 
 type CurrentUserResponse = components["schemas"]["CurrentUserResponse"];
 type UserUpdateParams = components["schemas"]["UserUpdateInput"];
+type SendCodeResponse = components["schemas"]["SendCodeResponse"];
+type UserDeleteParams = components["schemas"]["UserDeleteInput"];
 
-export const useUserUpdateMutation = () => {
+export const useUserMutation = () => {
 	const queryClient = useQueryClient();
+	const zustandLogout = useAuthStore((state) => state.logout);
 
 	const refreshCurrentUser = async () => {
 		await queryClient.invalidateQueries({
@@ -113,7 +117,11 @@ export const useUserUpdateMutation = () => {
 		}
 	};
 
-	const updateAvatar = useMutation<CurrentUserResponse, AppErrorWithResponse>({
+	const updateAvatar = useMutation<
+		CurrentUserResponse,
+		AppErrorWithResponse,
+		undefined
+	>({
 		mutationFn: async () => {
 			await uploadToS3();
 			const { data, error, response } = await client.PATCH("/me/avatar");
@@ -123,9 +131,44 @@ export const useUserUpdateMutation = () => {
 		onSuccess: refreshCurrentUser,
 	});
 
+	const sendCode = useMutation<
+		SendCodeResponse,
+		AppErrorWithResponse,
+		undefined
+	>({
+		mutationFn: async () => {
+			const { data, error, response } = await client.POST("/me/send-code");
+			if (error) throw { error, response };
+			return data;
+		},
+	});
+
+	const deleteUser = useMutation<
+		undefined,
+		AppErrorWithResponse,
+		UserDeleteParams
+	>({
+		mutationFn: async (params) => {
+			const { error, response } = await client.DELETE("/me", {
+				body: params,
+			});
+			if (error) throw { error, response };
+			return;
+		},
+		onSuccess: async () => {
+			await zustandLogout();
+		},
+	});
+
 	return {
 		updateUser,
 		updateAvatar,
-		isProcessing: updateUser.isPending || updateAvatar.isPending,
+		sendCode,
+		deleteUser,
+		isProcessing:
+			updateUser.isPending ||
+			updateAvatar.isPending ||
+			sendCode.isPending ||
+			deleteUser.isPending,
 	};
 };
