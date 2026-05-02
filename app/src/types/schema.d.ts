@@ -4,1096 +4,1267 @@
  */
 
 export interface paths {
-    "/auth/email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["update_email"];
-        trace?: never;
-    };
-    "/auth/email/send-code": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["send_code"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/email/verify-code": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["verify_code"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/google": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["auth_google"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/google/link": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["auth_google_link"];
-        delete: operations["auth_google_unlink"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["logout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["auth_refresh"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["get_me"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["update_me"];
-        trace?: never;
-    };
-    "/me/avatar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["update_avatar"];
-        trace?: never;
-    };
-    "/me/avatar/presigned_uri": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["presigned_uri"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+	"/auth/email": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch: operations["update_email"];
+		trace?: never;
+	};
+	"/auth/email/send-code": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["send_code"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/email/verify-code": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["verify_code"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/google": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["auth_google"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/google/link": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["auth_google_link"];
+		delete: operations["auth_google_unlink"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/logout": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["logout"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/refresh": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["auth_refresh"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/me": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["get_me"];
+		put?: never;
+		post?: never;
+		delete: operations["delete_user"];
+		options?: never;
+		head?: never;
+		patch: operations["update_me"];
+		trace?: never;
+	};
+	"/me/avatar": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch: operations["update_avatar"];
+		trace?: never;
+	};
+	"/me/avatar/presigned_uri": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["presigned_uri"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/me/send-code": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["send_deletion_code"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        AuthGoogleInput: {
-            device_info: components["schemas"]["DeviceInfoInput"];
-            id_token: string;
-        };
-        AuthRefreshInput: {
-            refresh_token: string;
-        };
-        AuthResponse: {
-            access_token: string;
-            refresh_token: string;
-        };
-        AuthStatusResponse: {
-            is_email_linked: boolean;
-            is_google_linked: boolean;
-        };
-        CurrentUserResponse: {
-            avatar_url?: string | null;
-            display_name: string;
-            email: string;
-            /** Format: int64 */
-            id: number;
-            role: string;
-        };
-        DeviceInfoInput: {
-            device_name?: string | null;
-            model_name?: string | null;
-            os: string;
-        };
-        /** @enum {string} */
-        ErrorCode: "INVALID_EMAIL" | "INVALID_DISPLAY_NAME" | "INVALID_VERIFICATION_CODE" | "INVALID_ACCESS_TOKEN" | "INVALID_REFRESH_TOKEN" | "INVALID_MEDIA_TYPE" | "INVALID_GOOGLE_TOKEN" | "GOOGLE_EMAIL_NOT_VERIFIED" | "GOOGLE_ACCOUNT_ALREADY_IN_USE" | "EMAIL_AUTHENTICATION_REQUIRED" | "EMAIL_ALREADY_IN_USE" | "USER_NOT_FOUND" | "GLOBAL_RATE_LIMITED" | "SEND_CODE_RATE_LIMITED" | "SESSION_CREATION_FAILED" | "NO_UPDATES_PROVIDED" | "UNAUTHORIZED" | "INTERNAL_ERROR";
-        ErrorResponse: {
-            code: components["schemas"]["ErrorCode"];
-            message: string;
-        };
-        LinkGoogleInput: {
-            id_token: string;
-        };
-        LogoutInput: {
-            refresh_token: string;
-        };
-        PresignedUriResponse: {
-            presigned_uri: string;
-        };
-        SendCodeInput: {
-            email: string;
-        };
-        SendCodeResponse: {
-            /** Format: int32 */
-            resend_cooldown_seconds: number;
-        };
-        UpdateEmailInput: {
-            code: string;
-            email: string;
-        };
-        UserAuthDetailResponse: {
-            auth_status: components["schemas"]["AuthStatusResponse"];
-            user: components["schemas"]["CurrentUserResponse"];
-        };
-        UserAvatarUpdateInput: {
-            media_type: string;
-        };
-        UserUpdateInput: {
-            display_name: string;
-        };
-        VerifyCodeInput: {
-            code: string;
-            device_info: components["schemas"]["DeviceInfoInput"];
-            email: string;
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+	schemas: {
+		AuthGoogleInput: {
+			device_info: components["schemas"]["DeviceInfoInput"];
+			id_token: string;
+		};
+		AuthRefreshInput: {
+			refresh_token: string;
+		};
+		AuthResponse: {
+			access_token: string;
+			refresh_token: string;
+		};
+		AuthStatusResponse: {
+			is_email_linked: boolean;
+			is_google_linked: boolean;
+		};
+		CurrentUserResponse: {
+			avatar_url?: string | null;
+			display_name: string;
+			email: string;
+			/** Format: int64 */
+			id: number;
+			role: string;
+		};
+		DeviceInfoInput: {
+			device_name?: string | null;
+			model_name?: string | null;
+			os: string;
+		};
+		/** @enum {string} */
+		ErrorCode:
+			| "INVALID_EMAIL"
+			| "INVALID_DISPLAY_NAME"
+			| "INVALID_VERIFICATION_CODE"
+			| "INVALID_ACCESS_TOKEN"
+			| "INVALID_REFRESH_TOKEN"
+			| "INVALID_MEDIA_TYPE"
+			| "INVALID_GOOGLE_TOKEN"
+			| "GOOGLE_EMAIL_NOT_VERIFIED"
+			| "GOOGLE_ACCOUNT_ALREADY_IN_USE"
+			| "EMAIL_AUTHENTICATION_REQUIRED"
+			| "EMAIL_ALREADY_IN_USE"
+			| "USER_NOT_FOUND"
+			| "GLOBAL_RATE_LIMITED"
+			| "SEND_CODE_RATE_LIMITED"
+			| "SESSION_CREATION_FAILED"
+			| "NO_UPDATES_PROVIDED"
+			| "UNAUTHORIZED"
+			| "INTERNAL_ERROR";
+		ErrorResponse: {
+			code: components["schemas"]["ErrorCode"];
+			message: string;
+		};
+		LinkGoogleInput: {
+			id_token: string;
+		};
+		LogoutInput: {
+			refresh_token: string;
+		};
+		PresignedUriResponse: {
+			presigned_uri: string;
+		};
+		SendCodeInput: {
+			email: string;
+		};
+		SendCodeResponse: {
+			/** Format: int32 */
+			resend_cooldown_seconds: number;
+		};
+		UpdateEmailInput: {
+			code: string;
+			email: string;
+		};
+		UserAuthDetailResponse: {
+			auth_status: components["schemas"]["AuthStatusResponse"];
+			user: components["schemas"]["CurrentUserResponse"];
+		};
+		UserAvatarUpdateInput: {
+			media_type: string;
+		};
+		UserDeleteInput: {
+			code: string;
+		};
+		UserUpdateInput: {
+			display_name: string;
+		};
+		VerifyCodeInput: {
+			code: string;
+			device_info: components["schemas"]["DeviceInfoInput"];
+			email: string;
+		};
+	};
+	responses: never;
+	parameters: never;
+	requestBodies: never;
+	headers: never;
+	pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    update_email: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateEmailInput"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CurrentUserResponse"];
-                };
-            };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "UNAUTHORIZED",
-                     *       "message": "unauthorized"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "EMAIL_ALREADY_IN_USE",
-                     *       "message": "email already in use"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GLOBAL_RATE_LIMITED",
-                     *       "message": "too many requests"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INTERNAL_ERROR",
-                     *       "message": "internal server error"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    send_code: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SendCodeInput"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SendCodeResponse"];
-                };
-            };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INVALID_EMAIL",
-                     *       "message": "invalid email"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INTERNAL_ERROR",
-                     *       "message": "internal server error"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    verify_code: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VerifyCodeInput"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthResponse"];
-                };
-            };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "EMAIL_ALREADY_IN_USE",
-                     *       "message": "email already in use"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GLOBAL_RATE_LIMITED",
-                     *       "message": "too many requests"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INTERNAL_ERROR",
-                     *       "message": "internal server error"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    auth_google: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AuthGoogleInput"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthResponse"];
-                };
-            };
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INVALID_GOOGLE_TOKEN",
-                     *       "message": "invalid google token"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GOOGLE_EMAIL_NOT_VERIFIED",
-                     *       "message": "google email not verified"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "EMAIL_ALREADY_IN_USE",
-                     *       "message": "email already in use"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GLOBAL_RATE_LIMITED",
-                     *       "message": "too many requests"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INTERNAL_ERROR",
-                     *       "message": "internal server error"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    auth_google_link: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LinkGoogleInput"];
-            };
-        };
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INVALID_GOOGLE_TOKEN",
-                     *       "message": "invalid google token"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GOOGLE_EMAIL_NOT_VERIFIED",
-                     *       "message": "google email not verified"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GOOGLE_ACCOUNT_ALREADY_IN_USE",
-                     *       "message": "google account already in use"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GLOBAL_RATE_LIMITED",
-                     *       "message": "too many requests"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INTERNAL_ERROR",
-                     *       "message": "internal server error"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    auth_google_unlink: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "EMAIL_AUTHENTICATION_REQUIRED",
-                     *       "message": "email authentication is requiered before unlinkng google"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GLOBAL_RATE_LIMITED",
-                     *       "message": "too many requests"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INTERNAL_ERROR",
-                     *       "message": "internal server error"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    logout: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LogoutInput"];
-            };
-        };
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GLOBAL_RATE_LIMITED",
-                     *       "message": "too many requests"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INTERNAL_ERROR",
-                     *       "message": "internal server error"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    auth_refresh: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AuthRefreshInput"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthResponse"];
-                };
-            };
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INVALID_REFRESH_TOKEN",
-                     *       "message": "invalid refresh token"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GLOBAL_RATE_LIMITED",
-                     *       "message": "too many requests"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INTERNAL_ERROR",
-                     *       "message": "internal server error"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    get_me: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserAuthDetailResponse"];
-                };
-            };
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "UNAUTHORIZED",
-                     *       "message": "unauthorized"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GLOBAL_RATE_LIMITED",
-                     *       "message": "too many requests"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INTERNAL_ERROR",
-                     *       "message": "internal server error"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    update_me: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserUpdateInput"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CurrentUserResponse"];
-                };
-            };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "UNAUTHORIZED",
-                     *       "message": "unauthorized"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GLOBAL_RATE_LIMITED",
-                     *       "message": "too many requests"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INTERNAL_ERROR",
-                     *       "message": "internal server error"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    update_avatar: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CurrentUserResponse"];
-                };
-            };
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "UNAUTHORIZED",
-                     *       "message": "unauthorized"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GLOBAL_RATE_LIMITED",
-                     *       "message": "too many requests"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INTERNAL_ERROR",
-                     *       "message": "internal server error"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    presigned_uri: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserAvatarUpdateInput"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PresignedUriResponse"];
-                };
-            };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INVALID_MEDIA_TYPE",
-                     *       "message": "invalid media type"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "UNAUTHORIZED",
-                     *       "message": "unauthorized"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "GLOBAL_RATE_LIMITED",
-                     *       "message": "too many requests"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": "INTERNAL_ERROR",
-                     *       "message": "internal server error"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
+	update_email: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["UpdateEmailInput"];
+			};
+		};
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CurrentUserResponse"];
+				};
+			};
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "UNAUTHORIZED",
+					 *       "message": "unauthorized"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "EMAIL_ALREADY_IN_USE",
+					 *       "message": "email already in use"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GLOBAL_RATE_LIMITED",
+					 *       "message": "too many requests"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	send_code: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SendCodeInput"];
+			};
+		};
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SendCodeResponse"];
+				};
+			};
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INVALID_EMAIL",
+					 *       "message": "invalid email"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	verify_code: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["VerifyCodeInput"];
+			};
+		};
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["AuthResponse"];
+				};
+			};
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "EMAIL_ALREADY_IN_USE",
+					 *       "message": "email already in use"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GLOBAL_RATE_LIMITED",
+					 *       "message": "too many requests"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	auth_google: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["AuthGoogleInput"];
+			};
+		};
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["AuthResponse"];
+				};
+			};
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INVALID_GOOGLE_TOKEN",
+					 *       "message": "invalid google token"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GOOGLE_EMAIL_NOT_VERIFIED",
+					 *       "message": "google email not verified"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "EMAIL_ALREADY_IN_USE",
+					 *       "message": "email already in use"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GLOBAL_RATE_LIMITED",
+					 *       "message": "too many requests"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	auth_google_link: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["LinkGoogleInput"];
+			};
+		};
+		responses: {
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INVALID_GOOGLE_TOKEN",
+					 *       "message": "invalid google token"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GOOGLE_EMAIL_NOT_VERIFIED",
+					 *       "message": "google email not verified"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GOOGLE_ACCOUNT_ALREADY_IN_USE",
+					 *       "message": "google account already in use"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GLOBAL_RATE_LIMITED",
+					 *       "message": "too many requests"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	auth_google_unlink: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			422: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "EMAIL_AUTHENTICATION_REQUIRED",
+					 *       "message": "email authentication is requiered before unlinkng google"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GLOBAL_RATE_LIMITED",
+					 *       "message": "too many requests"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	logout: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["LogoutInput"];
+			};
+		};
+		responses: {
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GLOBAL_RATE_LIMITED",
+					 *       "message": "too many requests"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	auth_refresh: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["AuthRefreshInput"];
+			};
+		};
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["AuthResponse"];
+				};
+			};
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INVALID_REFRESH_TOKEN",
+					 *       "message": "invalid refresh token"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GLOBAL_RATE_LIMITED",
+					 *       "message": "too many requests"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	get_me: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["UserAuthDetailResponse"];
+				};
+			};
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "UNAUTHORIZED",
+					 *       "message": "unauthorized"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GLOBAL_RATE_LIMITED",
+					 *       "message": "too many requests"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	delete_user: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["UserDeleteInput"];
+			};
+		};
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["UserDeleteInput"];
+				};
+			};
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INVALID_VERIFICATION_CODE",
+					 *       "message": "invalid verification code"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "UNAUTHORIZED",
+					 *       "message": "unauthorized"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GLOBAL_RATE_LIMITED",
+					 *       "message": "too many requests"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	update_me: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["UserUpdateInput"];
+			};
+		};
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CurrentUserResponse"];
+				};
+			};
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "UNAUTHORIZED",
+					 *       "message": "unauthorized"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GLOBAL_RATE_LIMITED",
+					 *       "message": "too many requests"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	update_avatar: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CurrentUserResponse"];
+				};
+			};
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "UNAUTHORIZED",
+					 *       "message": "unauthorized"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GLOBAL_RATE_LIMITED",
+					 *       "message": "too many requests"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	presigned_uri: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["UserAvatarUpdateInput"];
+			};
+		};
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["PresignedUriResponse"];
+				};
+			};
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INVALID_MEDIA_TYPE",
+					 *       "message": "invalid media type"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "UNAUTHORIZED",
+					 *       "message": "unauthorized"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "GLOBAL_RATE_LIMITED",
+					 *       "message": "too many requests"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
+	send_deletion_code: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SendCodeResponse"];
+				};
+			};
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "UNAUTHORIZED",
+					 *       "message": "unauthorized"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					/**
+					 * @example {
+					 *       "code": "INTERNAL_ERROR",
+					 *       "message": "internal server error"
+					 *     }
+					 */
+					"application/json": components["schemas"]["ErrorResponse"];
+				};
+			};
+		};
+	};
 }

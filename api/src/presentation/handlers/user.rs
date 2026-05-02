@@ -132,6 +132,7 @@ async fn update_avatar(
 #[utoipa::path(
     post,
     path = "/send-code",
+    operation_id = "send_deletion_code",
     responses(
         (status = 200, body = SendCodeResponse),
         (status = 401, body = ErrorResponse, example = json!({ "code": "UNAUTHORIZED", "message": "unauthorized" })),

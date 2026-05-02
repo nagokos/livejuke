@@ -17,7 +17,7 @@ import { useState } from "react";
 
 export default function Account() {
 	const { authStatus } = useAuthStatus();
-	const { authGoogleLink, authGoogleUnlink, logout } = useAuthMutation();
+	const { authGoogleLink, authGoogleUnlink } = useAuthMutation();
 	const [rootError, setRootError] = useState("");
 
 	const onAuthGoogleLinkSubmit = () => {
@@ -85,7 +85,7 @@ export default function Account() {
 					<Text className="text-base text-red-500">{rootError}</Text>
 				</View>
 			)}
-			<View className="mt-11 mx-5 gap-9">
+			<View className="mt-11 mx-5 gap-14">
 				<View className="flex-row items-center">
 					<View className="flex-1 ml-5">
 						<Text className="text-base font-bold">Googleログイン</Text>
@@ -167,50 +167,17 @@ export default function Account() {
 					<ChevronRight color="#aaa" />
 				</Pressable>
 
-				<Dialog>
-					<DialogTrigger asChild>
-						<TouchableOpacity className="flex-row items-center py-4">
-							<View className="ml-5">
-								<Text className="text-base font-bold text-rose-500">
-									ログアウト
-								</Text>
-							</View>
-						</TouchableOpacity>
-					</DialogTrigger>
-
-					<DialogContent
-						showClose={false}
-						className="w-[270px] p-0 gap-0 rounded-[14px] bg-white/95 overflow-hidden border-0"
-					>
-						<View className="pt-5 pb-4 px-4 items-center">
-							<DialogTitle className="text-center text-[17px] font-semibold text-black mb-1">
-								ログアウトします
-							</DialogTitle>
-							<DialogDescription className="text-center text-[13px] text-gray-800">
-								よろしいですか？
-							</DialogDescription>
-						</View>
-
-						<View className="flex-row border-t border-gray-300/80 h-[44px]">
-							<DialogClose asChild>
-								<TouchableOpacity className="flex-1 justify-center items-center border-r border-gray-300/80">
-									<Text className="text-gray-600 text-[17px]">キャンセル</Text>
-								</TouchableOpacity>
-							</DialogClose>
-
-							<DialogClose asChild>
-								<TouchableOpacity
-									onPress={logout}
-									className="flex-1 justify-center items-center"
-								>
-									<Text className="text-rose-500 text-[17px] font-semibold">
-										ログアウト
-									</Text>
-								</TouchableOpacity>
-							</DialogClose>
-						</View>
-					</DialogContent>
-				</Dialog>
+				<Pressable
+					onPress={() => router.push("/account/delete")}
+					className="flex-row items-center"
+				>
+					<View className="flex-1 ml-5">
+						<Text className="text-rose-500 text-[17px] font-semibold">
+							アカウント削除
+						</Text>
+					</View>
+					<ChevronRight color="#aaa" />
+				</Pressable>
 			</View>
 		</View>
 	);

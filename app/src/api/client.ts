@@ -43,7 +43,6 @@ const authMiddleware: Middleware = {
 		return request;
 	},
 	async onResponse({ request, response }) {
-		console.log(response);
 		if (response.status !== 401 || isPublicEndpoint(request)) {
 			return response;
 		}
