@@ -115,6 +115,16 @@ impl UserRepository for PgUserRepository {
 
         Ok(user)
     }
+    async fn delete(&self, user_id: Id<User>) -> Result<(), anyhow::Error> {
+        let sql = r#"
+            DELETE FROM users WHERE id = $1
+        "#;
+        sqlx::query(sql)
+            .bind(user_id.get())
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, FromRow)]

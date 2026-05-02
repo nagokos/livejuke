@@ -19,4 +19,5 @@ pub trait UserRepository: Send + Sync {
         user_id: Id<User>,
         update_user: UpdateUserPayload,
     ) -> Result<User, anyhow::Error>;
+    async fn delete(&self, user_id: Id<User>) -> Result<(), anyhow::Error>;
 }

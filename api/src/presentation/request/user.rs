@@ -10,3 +10,8 @@ pub struct UserUpdateInput {
 pub struct UserAvatarUpdateInput {
     pub media_type: String,
 }
+
+#[derive(Deserialize, ToSchema)]
+pub struct UserDeleteInput {
+    pub code: String,
+}
