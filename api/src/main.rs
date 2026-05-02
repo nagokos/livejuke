@@ -18,7 +18,7 @@ use crate::{
             service::{AuthProviders, AuthRepositories, AuthService},
         },
         traits::access_token_provider::AccessTokenProvider,
-        user::service::UserService,
+        user::service::{UserProviders, UserRepositories, UserService},
     },
     config::Config,
     infrastructure::{
@@ -111,50 +111,56 @@ async fn main() -> anyhow::Result<()> {
         config.access_token_secret,
         config.access_token_exp_secs,
     ));
+
+    let email_sender = Arc::new(SmtpEmailSender::try_new(SmtpConfig {
+        host: config.smtp_host,
+        port: config.smtp_port,
+        username: config.smtp_username,
+        password: config.smtp_password,
+        from: config.smtp_from,
+        tls: config.smtp_tls,
+    })?);
+
+    let verification_code_store = Arc::new(RedisVerificationCodeStore::new(
+        redis_conn.clone(),
+        config.verification_code_exp_secs,
+        config.max_attempts,
+        config.max_attempts_ttl_secs,
+        config.rate_limit,
+        config.rate_limit_ttl_secs,
+    ));
+
     let auth_service = {
-        let auth_repositories = AuthRepositories {
+        let repositories = AuthRepositories {
             auth_repo: Arc::new(PgAuthenticationRepository::new(pool.clone())),
             user_repo: user_repo.clone(),
             session_repo: Arc::new(PgSessionRepository::new(pool.clone())),
         };
-        let auth_providers = AuthProviders {
+        let providers = AuthProviders {
             access_token_provider: access_token_provider.clone(),
             refresh_token_provider: Arc::new(OpaqueRefreshTokenProvider),
             id_token_verifier: Arc::new(
                 GoogleTokenVerifier::new(config.google_client_id, reqwest::Client::new()).await?,
             ),
-            verification_code_store: Arc::new(RedisVerificationCodeStore::new(
-                redis_conn.clone(),
-                config.verification_code_exp_secs,
-                config.max_attempts,
-                config.max_attempts_ttl_secs,
-                config.rate_limit,
-                config.rate_limit_ttl_secs,
-            )),
-            email_sender: Arc::new(SmtpEmailSender::try_new(SmtpConfig {
-                host: config.smtp_host,
-                port: config.smtp_port,
-                username: config.smtp_username,
-                password: config.smtp_password,
-                from: config.smtp_from,
-                tls: config.smtp_tls,
-            })?),
+            verification_code_store: verification_code_store.clone(),
+            email_sender: email_sender.clone(),
         };
-        let auth_config = AuthConfig::new(config.refresh_token_exp_secs);
+        let config = AuthConfig::new(config.refresh_token_exp_secs);
 
-        Arc::new(AuthService::new(
-            auth_repositories,
-            auth_providers,
-            auth_config,
-        ))
+        Arc::new(AuthService::new(repositories, providers, config))
     };
 
     let user_service = {
-        Arc::new(UserService {
-            user_repo,
+        let repositories = UserRepositories {
+            user_repo: user_repo.clone(),
+        };
+        let providers = UserProviders {
             object_store: Arc::new(AwsS3Store::new(config.aws_s3_bucket_name).await),
             upload_session_store: Arc::new(RedisUploadSessionStore::new(redis_conn.clone())),
-        })
+            verification_code_store: verification_code_store.clone(),
+            email_sender: email_sender.clone(),
+        };
+        Arc::new(UserService::new(repositories, providers))
     };
 
     let app_state = AppState {

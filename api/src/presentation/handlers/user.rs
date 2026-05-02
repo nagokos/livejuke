@@ -11,10 +11,10 @@ use crate::{
     },
     presentation::{
         error::ErrorResponse,
-        request::user::{UserAvatarUpdateInput, UserUpdateInput},
+        request::user::{UserAvatarUpdateInput, UserDeleteInput, UserUpdateInput},
         response::{
             auth_response::UserAuthDetailResponse, presigned_uri_response::PresignedUriResponse,
-            user_response::CurrentUserResponse,
+            user_response::CurrentUserResponse, verification_code_response::SendCodeResponse,
         },
     },
 };
@@ -129,10 +129,63 @@ async fn update_avatar(
     ))
 }
 
+#[utoipa::path(
+    post,
+    path = "/send-code",
+    responses(
+        (status = 200, body = SendCodeResponse),
+        (status = 401, body = ErrorResponse, example = json!({ "code": "UNAUTHORIZED", "message": "unauthorized" })),
+        (status = 429, body = ErrorResponse,
+            examples(
+                ("Send Code Rate Limited" = (value = json!({ "code": "SEND_CODE_RATE_LIMITED", "message": "send code rate limited" }))),
+                ("Global Rate Limited" = (value = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "global rate limited" }))),
+            )
+        ),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
+    )
+)]
+async fn send_code(
+    State(state): State<AppState>,
+    Extension(current_user): Extension<CurrentUser>,
+) -> Result<(StatusCode, Json<SendCodeResponse>), AppError> {
+    state.user_service.send_code(current_user.id).await?;
+    Ok((
+        StatusCode::OK,
+        Json(SendCodeResponse::new(state.resend_cooldown_seconds)),
+    ))
+}
+
+#[utoipa::path(
+    delete,
+    path = "/",
+    request_body = UserDeleteInput,
+    responses(
+        (status = 200, body = UserDeleteInput),
+        (status = 400, body = ErrorResponse, example =  json!({ "code": "INVALID_VERIFICATION_CODE", "message": "invalid verification code" })),
+        (status = 401, body = ErrorResponse, example = json!({ "code": "UNAUTHORIZED", "message": "unauthorized" })),
+        (status = 429, body = ErrorResponse, example = json!({ "code": "GLOBAL_RATE_LIMITED", "message": "too many requests" })),
+        (status = 500, body = ErrorResponse, example = json!({ "code": "INTERNAL_ERROR", "message": "internal server error" })),
+    )
+)]
+async fn delete_user(
+    State(state): State<AppState>,
+    Extension(current_user): Extension<CurrentUser>,
+    Json(input): Json<UserDeleteInput>,
+) -> Result<StatusCode, AppError> {
+    state
+        .user_service
+        .delete_user(current_user.id, input.code)
+        .await?;
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
 pub fn create_user_router() -> OpenApiRouter<AppState> {
     OpenApiRouter::new()
         .routes(routes!(get_me))
         .routes(routes!(update_me))
         .routes(routes!(presigned_uri))
         .routes(routes!(update_avatar))
+        .routes(routes!(send_code))
+        .routes(routes!(delete_user))
 }
