@@ -22,6 +22,7 @@ pub struct Config {
     pub rate_limit_ttl_secs: u64,
     pub aws_s3_bucket_name: String,
     pub cdn_base_url: String,
+    pub contact_url: String,
 }
 
 impl Config {
@@ -51,6 +52,7 @@ impl Config {
             rate_limit_ttl_secs: env::var("RATE_LIMIT_TTL_SECONDS")?.parse()?,
             aws_s3_bucket_name: env::var("AWS_S3_BUCKET_NAME")?,
             cdn_base_url: env::var("CDN_BASE_URL")?,
+            contact_url: env::var("CONTACT_URL")?,
         })
     }
 }

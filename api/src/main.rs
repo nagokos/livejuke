@@ -13,9 +13,13 @@ use utoipa_swagger_ui::SwaggerUi;
 
 use crate::{
     application::{
+        artist::service::{ArtistProviders, ArtistRepositories, ArtistService},
         auth::{
             config::AuthConfig,
             service::{AuthProviders, AuthRepositories, AuthService},
+        },
+        release_group::service::{
+            ReleaseGroupProviders, ReleaseGroupRepositories, ReleaseGroupService,
         },
         traits::access_token_provider::AccessTokenProvider,
         user::service::{UserProviders, UserRepositories, UserService},
@@ -26,16 +30,23 @@ use crate::{
             jwt_access_token_provider::JwtAccessTokenProvider,
             opaque_refresh_token_provider::OpaqueRefreshTokenProvider,
         },
+        clock::SystemClock,
         external::{
             aws_s3_store::AwsS3Store,
             google_token_verifier::GoogleTokenVerifier,
+            musicbrainz::{
+                client::build_musicbrainz_client, http::MbClient, rate_limiter::MbRateLimiter,
+            },
             redis_upload_session_store::RedisUploadSessionStore,
             redis_verification_code_store::RedisVerificationCodeStore,
             smtp_email_sender::{SmtpConfig, SmtpEmailSender},
         },
         persistence::{
+            artist::repository::PgArtistRepository,
             pg_authentication_repository::PgAuthenticationRepository,
+            pg_canonical_release_repository::PgCanonicalReleaseRepository,
             pg_session_repository::PgSessionRepository, pg_user_repository::PgUserRepository,
+            release_group::repository::PgReleaseGroupRepository,
         },
     },
     presentation::{
@@ -64,6 +75,8 @@ struct ApiDoc;
 pub struct AppState {
     auth_service: Arc<AuthService>,
     user_service: Arc<UserService>,
+    artist_service: Arc<ArtistService>,
+    release_group_service: Arc<ReleaseGroupService>,
     access_token_provider: Arc<dyn AccessTokenProvider>,
     resend_cooldown_seconds: u8,
     cdn_base_url: String,
@@ -130,6 +143,18 @@ async fn main() -> anyhow::Result<()> {
         config.rate_limit_ttl_secs,
     ));
 
+    let clock = Arc::new(SystemClock);
+
+    let http_client = reqwest::Client::new();
+
+    let mb_client = {
+        let http_client =
+            build_musicbrainz_client("LiveJuke", env!("CARGO_PKG_VERSION"), &config.contact_url)?;
+        let rate_limiter = MbRateLimiter::new();
+
+        Arc::new(MbClient::new(http_client, rate_limiter))
+    };
+
     let auth_service = {
         let repositories = AuthRepositories {
             auth_repo: Arc::new(PgAuthenticationRepository::new(pool.clone())),
@@ -140,7 +165,7 @@ async fn main() -> anyhow::Result<()> {
             access_token_provider: access_token_provider.clone(),
             refresh_token_provider: Arc::new(OpaqueRefreshTokenProvider),
             id_token_verifier: Arc::new(
-                GoogleTokenVerifier::new(config.google_client_id, reqwest::Client::new()).await?,
+                GoogleTokenVerifier::new(config.google_client_id, http_client.clone()).await?,
             ),
             verification_code_store: verification_code_store.clone(),
             email_sender: email_sender.clone(),
@@ -163,9 +188,37 @@ async fn main() -> anyhow::Result<()> {
         Arc::new(UserService::new(repositories, providers))
     };
 
+    let artist_service = {
+        let repositories = ArtistRepositories {
+            artist_repo: Arc::new(PgArtistRepository::new(pool.clone())),
+        };
+        let providers = ArtistProviders {
+            artist_fetcher: mb_client.clone(),
+        };
+        Arc::new(ArtistService::new(repositories, providers, clock.clone()))
+    };
+
+    let release_group_service = {
+        let repositories = ReleaseGroupRepositories {
+            release_group_repo: Arc::new(PgReleaseGroupRepository::new(pool.clone())),
+            canonical_release_repo: Arc::new(PgCanonicalReleaseRepository::new(pool.clone())),
+        };
+        let providers = ReleaseGroupProviders {
+            release_group_fetcher: mb_client.clone(),
+            release_fetcher: mb_client.clone(),
+        };
+        Arc::new(ReleaseGroupService::new(
+            repositories,
+            providers,
+            clock.clone(),
+        ))
+    };
+
     let app_state = AppState {
         auth_service,
         user_service,
+        artist_service,
+        release_group_service,
         access_token_provider,
         resend_cooldown_seconds: config.resend_cooldown_secs,
         cdn_base_url: config.cdn_base_url,

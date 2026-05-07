@@ -1,5 +1,11 @@
+pub mod artist;
 pub mod authentication;
+pub mod canonical_release;
 pub mod id;
+pub mod mbid;
+pub mod recording;
+pub mod release_group;
 pub mod session;
 pub mod shared;
+pub mod track;
 pub mod user;
