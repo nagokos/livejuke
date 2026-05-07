@@ -17,7 +17,7 @@
 | updated_at | timestamp with time zone | now() | false |  |  |  |
 | deleted_at | timestamp with time zone |  | true |  |  |  |
 | deleted_by_user_id | bigint |  | true |  | [public.users](public.users.md) |  |
-| deletion_reson | text |  | true |  |  |  |
+| deletion_reason | text |  | true |  |  |  |
 
 ## Constraints
 
@@ -71,7 +71,7 @@ erDiagram
   timestamp_with_time_zone updated_at
   timestamp_with_time_zone deleted_at
   bigint deleted_by_user_id FK
-  text deletion_reson
+  text deletion_reason
 }
 "public.release_group_recordings" {
   bigint id
