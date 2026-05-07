@@ -21,11 +21,82 @@ impl PgUserRepository {
     }
 }
 
+#[derive(Debug, FromRow)]
+pub struct UserRow {
+    id: i64,
+    display_name: String,
+    email: String,
+    avatar_key: Option<String>,
+    role: String,
+    created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>,
+}
+
+impl TryFrom<UserRow> for User {
+    type Error = anyhow::Error;
+
+    fn try_from(value: UserRow) -> Result<Self, Self::Error> {
+        Ok(Self {
+            id: Id::new(value.id),
+            display_name: value.display_name,
+            email: value.email,
+            avatar_key: value.avatar_key,
+            role: value.role.parse()?,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+        })
+    }
+}
+
+#[derive(Debug, FromRow)]
+pub struct UserAuthDetailRow {
+    id: i64,
+    display_name: String,
+    email: String,
+    avatar_key: Option<String>,
+    role: String,
+    created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>,
+    linked_providers: Vec<String>,
+}
+
+impl TryFrom<UserAuthDetailRow> for UserAuthDetail {
+    type Error = anyhow::Error;
+
+    fn try_from(value: UserAuthDetailRow) -> Result<Self, Self::Error> {
+        Ok(Self {
+            user: {
+                User {
+                    id: Id::new(value.id),
+                    display_name: value.display_name,
+                    email: value.email,
+                    avatar_key: value.avatar_key,
+                    role: value.role.parse()?,
+                    created_at: value.created_at,
+                    updated_at: value.updated_at,
+                }
+            },
+            linked_providers: {
+                value
+                    .linked_providers
+                    .iter()
+                    .map(|s| s.parse())
+                    .collect::<Result<Vec<Provider>, _>>()?
+            },
+        })
+    }
+}
+
 #[async_trait]
 impl UserRepository for PgUserRepository {
     async fn find_by_id(&self, user_id: Id<User>) -> Result<Option<User>, anyhow::Error> {
         let sql = r#"
-            SELECT * FROM users WHERE id = $1;
+            SELECT 
+                id,
+                display_name,
+                avatar_key,
+            FROM users 
+            WHERE id = $1
         "#;
         sqlx::query_as::<_, UserRow>(sql)
             .bind(user_id.get())
@@ -124,71 +195,5 @@ impl UserRepository for PgUserRepository {
             .execute(&self.pool)
             .await?;
         Ok(())
-    }
-}
-
-#[derive(Debug, FromRow)]
-pub struct UserRow {
-    id: i64,
-    display_name: String,
-    email: String,
-    avatar_key: Option<String>,
-    role: String,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
-}
-
-impl TryFrom<UserRow> for User {
-    type Error = anyhow::Error;
-
-    fn try_from(value: UserRow) -> Result<Self, Self::Error> {
-        Ok(Self {
-            id: Id::new(value.id),
-            display_name: value.display_name,
-            email: value.email,
-            avatar_key: value.avatar_key,
-            role: value.role.parse()?,
-            created_at: value.created_at,
-            updated_at: value.updated_at,
-        })
-    }
-}
-
-#[derive(Debug, FromRow)]
-pub struct UserAuthDetailRow {
-    id: i64,
-    display_name: String,
-    email: String,
-    avatar_key: Option<String>,
-    role: String,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
-    linked_providers: Vec<String>,
-}
-
-impl TryFrom<UserAuthDetailRow> for UserAuthDetail {
-    type Error = anyhow::Error;
-
-    fn try_from(value: UserAuthDetailRow) -> Result<Self, Self::Error> {
-        Ok(Self {
-            user: {
-                User {
-                    id: Id::new(value.id),
-                    display_name: value.display_name,
-                    email: value.email,
-                    avatar_key: value.avatar_key,
-                    role: value.role.parse()?,
-                    created_at: value.created_at,
-                    updated_at: value.updated_at,
-                }
-            },
-            linked_providers: {
-                value
-                    .linked_providers
-                    .iter()
-                    .map(|s| s.parse())
-                    .collect::<Result<Vec<Provider>, _>>()?
-            },
-        })
     }
 }

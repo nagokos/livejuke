@@ -24,6 +24,31 @@ impl PgAuthenticationRepository {
     }
 }
 
+#[derive(Debug, FromRow)]
+pub struct AuthenticationRow {
+    id: i64,
+    user_id: i64,
+    provider: String,
+    uid: String,
+    created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>,
+}
+
+impl TryFrom<AuthenticationRow> for Authentication {
+    type Error = anyhow::Error;
+
+    fn try_from(value: AuthenticationRow) -> Result<Self, Self::Error> {
+        Ok(Self {
+            id: Id::new(value.id),
+            user_id: Id::new(value.user_id),
+            provider: value.provider.parse()?,
+            uid: value.uid,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+        })
+    }
+}
+
 #[async_trait]
 impl AuthRepository for PgAuthenticationRepository {
     async fn create(
@@ -210,30 +235,5 @@ impl AuthRepository for PgAuthenticationRepository {
             .execute(&self.pool)
             .await?;
         Ok(())
-    }
-}
-
-#[derive(Debug, FromRow)]
-pub struct AuthenticationRow {
-    id: i64,
-    user_id: i64,
-    provider: String,
-    uid: String,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
-}
-
-impl TryFrom<AuthenticationRow> for Authentication {
-    type Error = anyhow::Error;
-
-    fn try_from(value: AuthenticationRow) -> Result<Self, Self::Error> {
-        Ok(Self {
-            id: Id::new(value.id),
-            user_id: Id::new(value.user_id),
-            provider: value.provider.parse()?,
-            uid: value.uid,
-            created_at: value.created_at,
-            updated_at: value.updated_at,
-        })
     }
 }
