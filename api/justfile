@@ -15,6 +15,12 @@ migrate-rev:
 gen-schema:
   curl -s http://localhost:3000/api-docs/openapi.json | yq -P > ../schema/openapi.yaml
 
+seed:
+  cargo run --bin seed_artists
+
+import-canonical:
+	psql $DATABASE_URL -f scripts/import_canonical.sql
+
 db-doc:
   tbls doc --config .tbls.yaml --force
 
