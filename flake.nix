@@ -35,6 +35,7 @@
           jq
           yq-go
           just
+					tbls
         ];
         apiPkgs =
           (with pkgs; [

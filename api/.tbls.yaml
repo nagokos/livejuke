@@ -1,0 +1,18 @@
+---
+dsn: ${TBLS_DSN}
+docPath: docs/schema
+
+er:
+  format: mermaid
+  hideDef: false
+
+lint:
+  requireTableComment:
+    enabled: false
+  requireColumnComment:
+    enabled: false
+  unrelatedTable:
+    enabled: true
+
+exclude:
+  - _sqlx_migrations

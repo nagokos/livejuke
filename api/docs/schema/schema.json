@@ -1,0 +1,1614 @@
+{
+  "name": "livejuke",
+  "tables": [
+    {
+      "name": "public.users",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "display_name",
+          "type": "varchar(20)",
+          "nullable": false,
+          "default": "'ゲスト'::character varying"
+        },
+        {
+          "name": "email",
+          "type": "varchar(254)",
+          "nullable": false
+        },
+        {
+          "name": "avatar_key",
+          "type": "varchar(512)",
+          "nullable": true,
+          "default": "NULL::character varying"
+        },
+        {
+          "name": "role",
+          "type": "varchar",
+          "nullable": false,
+          "default": "'user'::character varying"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "users_pkey",
+          "def": "CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)",
+          "table": "public.users",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "users_email_key",
+          "def": "CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email)",
+          "table": "public.users",
+          "columns": [
+            "email"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "users_role_check",
+          "type": "CHECK",
+          "def": "CHECK (((role)::text = ANY ((ARRAY['user'::character varying, 'admin'::character varying])::text[])))",
+          "table": "public.users",
+          "referenced_table": "",
+          "columns": [
+            "role"
+          ]
+        },
+        {
+          "name": "users_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.users",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "users_email_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (email)",
+          "table": "public.users",
+          "referenced_table": "",
+          "columns": [
+            "email"
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "name": "set_updated_at",
+          "def": "CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION update_updated_at()"
+        }
+      ]
+    },
+    {
+      "name": "public.authentications",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "provider",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "uid",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "authentications_pkey",
+          "def": "CREATE UNIQUE INDEX authentications_pkey ON public.authentications USING btree (id)",
+          "table": "public.authentications",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "authentications_provider_uid_key",
+          "def": "CREATE UNIQUE INDEX authentications_provider_uid_key ON public.authentications USING btree (provider, uid)",
+          "table": "public.authentications",
+          "columns": [
+            "provider",
+            "uid"
+          ]
+        },
+        {
+          "name": "authentications_user_id_provider_key",
+          "def": "CREATE UNIQUE INDEX authentications_user_id_provider_key ON public.authentications USING btree (user_id, provider)",
+          "table": "public.authentications",
+          "columns": [
+            "user_id",
+            "provider"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "authentications_provider_check",
+          "type": "CHECK",
+          "def": "CHECK ((provider = ANY (ARRAY['email'::text, 'google'::text])))",
+          "table": "public.authentications",
+          "referenced_table": "",
+          "columns": [
+            "provider"
+          ]
+        },
+        {
+          "name": "authentications_user_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE",
+          "table": "public.authentications",
+          "referenced_table": "public.users",
+          "columns": [
+            "user_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "authentications_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.authentications",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "authentications_provider_uid_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (provider, uid)",
+          "table": "public.authentications",
+          "referenced_table": "",
+          "columns": [
+            "provider",
+            "uid"
+          ]
+        },
+        {
+          "name": "authentications_user_id_provider_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (user_id, provider)",
+          "table": "public.authentications",
+          "referenced_table": "",
+          "columns": [
+            "user_id",
+            "provider"
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "name": "set_updated_at",
+          "def": "CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.authentications FOR EACH ROW EXECUTE FUNCTION update_updated_at()"
+        }
+      ]
+    },
+    {
+      "name": "public.sessions",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "token_hash",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "device_name",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "model_name",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "os",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "is_revoked",
+          "type": "boolean",
+          "nullable": false,
+          "default": "false"
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sessions_pkey",
+          "def": "CREATE UNIQUE INDEX sessions_pkey ON public.sessions USING btree (id)",
+          "table": "public.sessions",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "sessions_token_hash_key",
+          "def": "CREATE UNIQUE INDEX sessions_token_hash_key ON public.sessions USING btree (token_hash)",
+          "table": "public.sessions",
+          "columns": [
+            "token_hash"
+          ]
+        },
+        {
+          "name": "idx_sessions_user_id",
+          "def": "CREATE INDEX idx_sessions_user_id ON public.sessions USING btree (user_id)",
+          "table": "public.sessions",
+          "columns": [
+            "user_id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "sessions_user_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE",
+          "table": "public.sessions",
+          "referenced_table": "public.users",
+          "columns": [
+            "user_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "sessions_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.sessions",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "sessions_token_hash_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (token_hash)",
+          "table": "public.sessions",
+          "referenced_table": "",
+          "columns": [
+            "token_hash"
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "name": "set_updated_at",
+          "def": "CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.sessions FOR EACH ROW EXECUTE FUNCTION update_updated_at()"
+        }
+      ]
+    },
+    {
+      "name": "public.artists",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "mbid",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "first_release_date",
+          "type": "date",
+          "nullable": true
+        },
+        {
+          "name": "tracks_fetched",
+          "type": "boolean",
+          "nullable": false,
+          "default": "false"
+        },
+        {
+          "name": "spotify_id",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "nullable": false,
+          "default": "'pending'::text"
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "approved_at",
+          "type": "timestamp with time zone",
+          "nullable": true
+        },
+        {
+          "name": "approved_by_user_id",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "created_by_user_id",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "nullable": true
+        },
+        {
+          "name": "deleted_by_user_id",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "deletion_reson",
+          "type": "text",
+          "nullable": true
+        }
+      ],
+      "indexes": [
+        {
+          "name": "artists_pkey",
+          "def": "CREATE UNIQUE INDEX artists_pkey ON public.artists USING btree (id)",
+          "table": "public.artists",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "artists_mbid_key",
+          "def": "CREATE UNIQUE INDEX artists_mbid_key ON public.artists USING btree (mbid)",
+          "table": "public.artists",
+          "columns": [
+            "mbid"
+          ]
+        },
+        {
+          "name": "artists_spotify_id_key",
+          "def": "CREATE UNIQUE INDEX artists_spotify_id_key ON public.artists USING btree (spotify_id)",
+          "table": "public.artists",
+          "columns": [
+            "spotify_id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "artists_source_check",
+          "type": "CHECK",
+          "def": "CHECK ((source = ANY (ARRAY['musicbrainz'::text, 'manual'::text])))",
+          "table": "public.artists",
+          "referenced_table": "",
+          "columns": [
+            "source"
+          ]
+        },
+        {
+          "name": "artists_status_check",
+          "type": "CHECK",
+          "def": "CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text])))",
+          "table": "public.artists",
+          "referenced_table": "",
+          "columns": [
+            "status"
+          ]
+        },
+        {
+          "name": "deleted_consistency",
+          "type": "CHECK",
+          "def": "CHECK ((((deleted_at IS NULL) AND (deleted_by_user_id IS NULL)) OR ((deleted_at IS NOT NULL) AND (deleted_by_user_id IS NOT NULL))))",
+          "table": "public.artists",
+          "referenced_table": "",
+          "columns": [
+            "deleted_at",
+            "deleted_by_user_id"
+          ]
+        },
+        {
+          "name": "mbid_source_consistency",
+          "type": "CHECK",
+          "def": "CHECK ((((source = 'musicbrainz'::text) AND (mbid IS NOT NULL)) OR ((source = 'manual'::text) AND (mbid IS NULL))))",
+          "table": "public.artists",
+          "referenced_table": "",
+          "columns": [
+            "source",
+            "mbid"
+          ]
+        },
+        {
+          "name": "status_approved_consistency",
+          "type": "CHECK",
+          "def": "CHECK ((((status = 'pending'::text) AND (approved_at IS NULL) AND (approved_by_user_id IS NULL)) OR ((status = 'approved'::text) AND (approved_at IS NOT NULL) AND (approved_by_user_id IS NOT NULL))))",
+          "table": "public.artists",
+          "referenced_table": "",
+          "columns": [
+            "status",
+            "approved_at",
+            "approved_by_user_id"
+          ]
+        },
+        {
+          "name": "artists_approved_by_user_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (approved_by_user_id) REFERENCES users(id)",
+          "table": "public.artists",
+          "referenced_table": "public.users",
+          "columns": [
+            "approved_by_user_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "artists_created_by_user_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (created_by_user_id) REFERENCES users(id)",
+          "table": "public.artists",
+          "referenced_table": "public.users",
+          "columns": [
+            "created_by_user_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "artists_deleted_by_user_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (deleted_by_user_id) REFERENCES users(id)",
+          "table": "public.artists",
+          "referenced_table": "public.users",
+          "columns": [
+            "deleted_by_user_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "artists_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.artists",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "artists_mbid_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (mbid)",
+          "table": "public.artists",
+          "referenced_table": "",
+          "columns": [
+            "mbid"
+          ]
+        },
+        {
+          "name": "artists_spotify_id_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (spotify_id)",
+          "table": "public.artists",
+          "referenced_table": "",
+          "columns": [
+            "spotify_id"
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "name": "set_updated_at",
+          "def": "CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.artists FOR EACH ROW EXECUTE FUNCTION update_updated_at()"
+        }
+      ]
+    },
+    {
+      "name": "public.canonical_releases",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "release_mbid",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "canonical_release_mbid",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "release_group_mbid",
+          "type": "uuid",
+          "nullable": false
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_canonical_releases_release_group_mbid",
+          "def": "CREATE INDEX idx_canonical_releases_release_group_mbid ON public.canonical_releases USING btree (release_group_mbid)",
+          "table": "public.canonical_releases",
+          "columns": [
+            "release_group_mbid"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.release_groups",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "artist_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "mbid",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "primary_type",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "first_release_date",
+          "type": "date",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "nullable": false,
+          "default": "'pending'::text"
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "approved_at",
+          "type": "timestamp with time zone",
+          "nullable": true
+        },
+        {
+          "name": "approved_by_user_id",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "created_by_user_id",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "nullable": true
+        },
+        {
+          "name": "deleted_by_user_id",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "deletion_reson",
+          "type": "text",
+          "nullable": true
+        }
+      ],
+      "indexes": [
+        {
+          "name": "release_groups_pkey",
+          "def": "CREATE UNIQUE INDEX release_groups_pkey ON public.release_groups USING btree (id)",
+          "table": "public.release_groups",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "release_groups_mbid_key",
+          "def": "CREATE UNIQUE INDEX release_groups_mbid_key ON public.release_groups USING btree (mbid)",
+          "table": "public.release_groups",
+          "columns": [
+            "mbid"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "deleted_consistency",
+          "type": "CHECK",
+          "def": "CHECK ((((deleted_at IS NULL) AND (deleted_by_user_id IS NULL)) OR ((deleted_at IS NOT NULL) AND (deleted_by_user_id IS NOT NULL))))",
+          "table": "public.release_groups",
+          "referenced_table": "",
+          "columns": [
+            "deleted_at",
+            "deleted_by_user_id"
+          ]
+        },
+        {
+          "name": "mbid_source_consistency",
+          "type": "CHECK",
+          "def": "CHECK ((((source = 'musicbrainz'::text) AND (mbid IS NOT NULL)) OR ((source = 'manual'::text) AND (mbid IS NULL))))",
+          "table": "public.release_groups",
+          "referenced_table": "",
+          "columns": [
+            "source",
+            "mbid"
+          ]
+        },
+        {
+          "name": "release_groups_primary_type_check",
+          "type": "CHECK",
+          "def": "CHECK ((primary_type = ANY (ARRAY['album'::text, 'single'::text, 'ep'::text])))",
+          "table": "public.release_groups",
+          "referenced_table": "",
+          "columns": [
+            "primary_type"
+          ]
+        },
+        {
+          "name": "release_groups_source_check",
+          "type": "CHECK",
+          "def": "CHECK ((source = ANY (ARRAY['musicbrainz'::text, 'manual'::text])))",
+          "table": "public.release_groups",
+          "referenced_table": "",
+          "columns": [
+            "source"
+          ]
+        },
+        {
+          "name": "release_groups_status_check",
+          "type": "CHECK",
+          "def": "CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text])))",
+          "table": "public.release_groups",
+          "referenced_table": "",
+          "columns": [
+            "status"
+          ]
+        },
+        {
+          "name": "status_approved_consistency",
+          "type": "CHECK",
+          "def": "CHECK ((((status = 'pending'::text) AND (approved_at IS NULL) AND (approved_by_user_id IS NULL)) OR ((status = 'approved'::text) AND (approved_at IS NOT NULL) AND (approved_by_user_id IS NOT NULL))))",
+          "table": "public.release_groups",
+          "referenced_table": "",
+          "columns": [
+            "status",
+            "approved_at",
+            "approved_by_user_id"
+          ]
+        },
+        {
+          "name": "release_groups_approved_by_user_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (approved_by_user_id) REFERENCES users(id)",
+          "table": "public.release_groups",
+          "referenced_table": "public.users",
+          "columns": [
+            "approved_by_user_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "release_groups_created_by_user_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (created_by_user_id) REFERENCES users(id)",
+          "table": "public.release_groups",
+          "referenced_table": "public.users",
+          "columns": [
+            "created_by_user_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "release_groups_deleted_by_user_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (deleted_by_user_id) REFERENCES users(id)",
+          "table": "public.release_groups",
+          "referenced_table": "public.users",
+          "columns": [
+            "deleted_by_user_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "release_groups_artist_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE RESTRICT",
+          "table": "public.release_groups",
+          "referenced_table": "public.artists",
+          "columns": [
+            "artist_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "release_groups_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.release_groups",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "release_groups_mbid_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (mbid)",
+          "table": "public.release_groups",
+          "referenced_table": "",
+          "columns": [
+            "mbid"
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "name": "set_updated_at",
+          "def": "CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.release_groups FOR EACH ROW EXECUTE FUNCTION update_updated_at()"
+        }
+      ]
+    },
+    {
+      "name": "public.recordings",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "mbid",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "first_release_date",
+          "type": "date",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "nullable": false,
+          "default": "'pending'::text"
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "approved_at",
+          "type": "timestamp with time zone",
+          "nullable": true
+        },
+        {
+          "name": "approved_by_user_id",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "created_by_user_id",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "nullable": true
+        },
+        {
+          "name": "deleted_by_user_id",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "deletion_reson",
+          "type": "text",
+          "nullable": true
+        }
+      ],
+      "indexes": [
+        {
+          "name": "recordings_pkey",
+          "def": "CREATE UNIQUE INDEX recordings_pkey ON public.recordings USING btree (id)",
+          "table": "public.recordings",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "recordings_mbid_key",
+          "def": "CREATE UNIQUE INDEX recordings_mbid_key ON public.recordings USING btree (mbid)",
+          "table": "public.recordings",
+          "columns": [
+            "mbid"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "deleted_consistency",
+          "type": "CHECK",
+          "def": "CHECK ((((deleted_at IS NULL) AND (deleted_by_user_id IS NULL)) OR ((deleted_at IS NOT NULL) AND (deleted_by_user_id IS NOT NULL))))",
+          "table": "public.recordings",
+          "referenced_table": "",
+          "columns": [
+            "deleted_at",
+            "deleted_by_user_id"
+          ]
+        },
+        {
+          "name": "mbid_source_consistency",
+          "type": "CHECK",
+          "def": "CHECK ((((source = 'musicbrainz'::text) AND (mbid IS NOT NULL)) OR ((source = 'manual'::text) AND (mbid IS NULL))))",
+          "table": "public.recordings",
+          "referenced_table": "",
+          "columns": [
+            "source",
+            "mbid"
+          ]
+        },
+        {
+          "name": "recordings_source_check",
+          "type": "CHECK",
+          "def": "CHECK ((source = ANY (ARRAY['musicbrainz'::text, 'manual'::text])))",
+          "table": "public.recordings",
+          "referenced_table": "",
+          "columns": [
+            "source"
+          ]
+        },
+        {
+          "name": "recordings_status_check",
+          "type": "CHECK",
+          "def": "CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text])))",
+          "table": "public.recordings",
+          "referenced_table": "",
+          "columns": [
+            "status"
+          ]
+        },
+        {
+          "name": "status_approved_consistency",
+          "type": "CHECK",
+          "def": "CHECK ((((status = 'pending'::text) AND (approved_at IS NULL) AND (approved_by_user_id IS NULL)) OR ((status = 'approved'::text) AND (approved_at IS NOT NULL) AND (approved_by_user_id IS NOT NULL))))",
+          "table": "public.recordings",
+          "referenced_table": "",
+          "columns": [
+            "status",
+            "approved_at",
+            "approved_by_user_id"
+          ]
+        },
+        {
+          "name": "recordings_approved_by_user_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (approved_by_user_id) REFERENCES users(id)",
+          "table": "public.recordings",
+          "referenced_table": "public.users",
+          "columns": [
+            "approved_by_user_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "recordings_created_by_user_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (created_by_user_id) REFERENCES users(id)",
+          "table": "public.recordings",
+          "referenced_table": "public.users",
+          "columns": [
+            "created_by_user_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "recordings_deleted_by_user_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (deleted_by_user_id) REFERENCES users(id)",
+          "table": "public.recordings",
+          "referenced_table": "public.users",
+          "columns": [
+            "deleted_by_user_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "recordings_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.recordings",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "recordings_mbid_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (mbid)",
+          "table": "public.recordings",
+          "referenced_table": "",
+          "columns": [
+            "mbid"
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "name": "set_updated_at",
+          "def": "CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.recordings FOR EACH ROW EXECUTE FUNCTION update_updated_at()"
+        }
+      ]
+    },
+    {
+      "name": "public.release_group_secondary_types",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "release_group_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "secondary_type",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "release_group_secondary_types_pkey",
+          "def": "CREATE UNIQUE INDEX release_group_secondary_types_pkey ON public.release_group_secondary_types USING btree (id)",
+          "table": "public.release_group_secondary_types",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "release_group_secondary_types_release_group_id_secondary_ty_key",
+          "def": "CREATE UNIQUE INDEX release_group_secondary_types_release_group_id_secondary_ty_key ON public.release_group_secondary_types USING btree (release_group_id, secondary_type)",
+          "table": "public.release_group_secondary_types",
+          "columns": [
+            "release_group_id",
+            "secondary_type"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "release_group_secondary_types_secondary_type_check",
+          "type": "CHECK",
+          "def": "CHECK ((secondary_type = ANY (ARRAY['compilation'::text, 'soundtrack'::text, 'spokenword'::text, 'interview'::text, 'audiobook'::text, 'audio_drama'::text, 'live'::text, 'remix'::text, 'dj_mix'::text, 'mixtape_street'::text, 'demo'::text, 'field_recording'::text])))",
+          "table": "public.release_group_secondary_types",
+          "referenced_table": "",
+          "columns": [
+            "secondary_type"
+          ]
+        },
+        {
+          "name": "release_group_secondary_types_release_group_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (release_group_id) REFERENCES release_groups(id) ON DELETE CASCADE",
+          "table": "public.release_group_secondary_types",
+          "referenced_table": "public.release_groups",
+          "columns": [
+            "release_group_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "release_group_secondary_types_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.release_group_secondary_types",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "release_group_secondary_types_release_group_id_secondary_ty_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (release_group_id, secondary_type)",
+          "table": "public.release_group_secondary_types",
+          "referenced_table": "",
+          "columns": [
+            "release_group_id",
+            "secondary_type"
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "name": "set_updated_at",
+          "def": "CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.release_group_secondary_types FOR EACH ROW EXECUTE FUNCTION update_updated_at()"
+        }
+      ]
+    },
+    {
+      "name": "public.release_group_recordings",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "release_group_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "recording_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "track_mbid",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "disc_number",
+          "type": "smallint",
+          "nullable": false
+        },
+        {
+          "name": "track_number",
+          "type": "smallint",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "release_group_recordings_pkey",
+          "def": "CREATE UNIQUE INDEX release_group_recordings_pkey ON public.release_group_recordings USING btree (id)",
+          "table": "public.release_group_recordings",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "release_group_recordings_track_mbid_key",
+          "def": "CREATE UNIQUE INDEX release_group_recordings_track_mbid_key ON public.release_group_recordings USING btree (track_mbid)",
+          "table": "public.release_group_recordings",
+          "columns": [
+            "track_mbid"
+          ]
+        },
+        {
+          "name": "release_group_recordings_release_group_id_recording_id_key",
+          "def": "CREATE UNIQUE INDEX release_group_recordings_release_group_id_recording_id_key ON public.release_group_recordings USING btree (release_group_id, recording_id)",
+          "table": "public.release_group_recordings",
+          "columns": [
+            "release_group_id",
+            "recording_id"
+          ]
+        },
+        {
+          "name": "release_group_recordings_release_group_id_disc_number_track_key",
+          "def": "CREATE UNIQUE INDEX release_group_recordings_release_group_id_disc_number_track_key ON public.release_group_recordings USING btree (release_group_id, disc_number, track_number)",
+          "table": "public.release_group_recordings",
+          "columns": [
+            "release_group_id",
+            "disc_number",
+            "track_number"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "release_group_recordings_disc_number_check",
+          "type": "CHECK",
+          "def": "CHECK ((disc_number \u003e 0))",
+          "table": "public.release_group_recordings",
+          "referenced_table": "",
+          "columns": [
+            "disc_number"
+          ]
+        },
+        {
+          "name": "release_group_recordings_track_number_check",
+          "type": "CHECK",
+          "def": "CHECK ((track_number \u003e 0))",
+          "table": "public.release_group_recordings",
+          "referenced_table": "",
+          "columns": [
+            "track_number"
+          ]
+        },
+        {
+          "name": "release_group_recordings_release_group_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (release_group_id) REFERENCES release_groups(id) ON DELETE CASCADE",
+          "table": "public.release_group_recordings",
+          "referenced_table": "public.release_groups",
+          "columns": [
+            "release_group_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "release_group_recordings_recording_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (recording_id) REFERENCES recordings(id) ON DELETE CASCADE",
+          "table": "public.release_group_recordings",
+          "referenced_table": "public.recordings",
+          "columns": [
+            "recording_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "release_group_recordings_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.release_group_recordings",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "release_group_recordings_track_mbid_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (track_mbid)",
+          "table": "public.release_group_recordings",
+          "referenced_table": "",
+          "columns": [
+            "track_mbid"
+          ]
+        },
+        {
+          "name": "release_group_recordings_release_group_id_recording_id_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (release_group_id, recording_id)",
+          "table": "public.release_group_recordings",
+          "referenced_table": "",
+          "columns": [
+            "release_group_id",
+            "recording_id"
+          ]
+        },
+        {
+          "name": "release_group_recordings_release_group_id_disc_number_track_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (release_group_id, disc_number, track_number)",
+          "table": "public.release_group_recordings",
+          "referenced_table": "",
+          "columns": [
+            "release_group_id",
+            "disc_number",
+            "track_number"
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "name": "set_updated_at",
+          "def": "CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.release_group_recordings FOR EACH ROW EXECUTE FUNCTION update_updated_at()"
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "table": "public.authentications",
+      "columns": [
+        "user_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.sessions",
+      "columns": [
+        "user_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.artists",
+      "columns": [
+        "approved_by_user_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (approved_by_user_id) REFERENCES users(id)"
+    },
+    {
+      "table": "public.artists",
+      "columns": [
+        "created_by_user_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (created_by_user_id) REFERENCES users(id)"
+    },
+    {
+      "table": "public.artists",
+      "columns": [
+        "deleted_by_user_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (deleted_by_user_id) REFERENCES users(id)"
+    },
+    {
+      "table": "public.release_groups",
+      "columns": [
+        "approved_by_user_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (approved_by_user_id) REFERENCES users(id)"
+    },
+    {
+      "table": "public.release_groups",
+      "columns": [
+        "created_by_user_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (created_by_user_id) REFERENCES users(id)"
+    },
+    {
+      "table": "public.release_groups",
+      "columns": [
+        "deleted_by_user_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (deleted_by_user_id) REFERENCES users(id)"
+    },
+    {
+      "table": "public.release_groups",
+      "columns": [
+        "artist_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.artists",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE RESTRICT"
+    },
+    {
+      "table": "public.recordings",
+      "columns": [
+        "approved_by_user_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (approved_by_user_id) REFERENCES users(id)"
+    },
+    {
+      "table": "public.recordings",
+      "columns": [
+        "created_by_user_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (created_by_user_id) REFERENCES users(id)"
+    },
+    {
+      "table": "public.recordings",
+      "columns": [
+        "deleted_by_user_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (deleted_by_user_id) REFERENCES users(id)"
+    },
+    {
+      "table": "public.release_group_secondary_types",
+      "columns": [
+        "release_group_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.release_groups",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (release_group_id) REFERENCES release_groups(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.release_group_recordings",
+      "columns": [
+        "release_group_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.release_groups",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (release_group_id) REFERENCES release_groups(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.release_group_recordings",
+      "columns": [
+        "recording_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.recordings",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (recording_id) REFERENCES recordings(id) ON DELETE CASCADE"
+    }
+  ],
+  "functions": [
+    {
+      "name": "public.update_updated_at",
+      "return_type": "trigger",
+      "arguments": "",
+      "type": "FUNCTION"
+    }
+  ],
+  "driver": {
+    "name": "postgres",
+    "database_version": "PostgreSQL 17.9 (Debian 17.9-1.pgdg13+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+    "meta": {
+      "current_schema": "public",
+      "search_paths": [
+        "livejuke",
+        "public"
+      ],
+      "dict": {
+        "Functions": "Stored procedures and functions"
+      }
+    }
+  }
+}
