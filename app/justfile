@@ -1,0 +1,11 @@
+dev:
+  npx expo start
+
+dev-ios:
+	npx expo run:ios
+	
+prebuild:
+	npx expo prebuild --clean
+
+gen-schema:
+  npx openapi-typescript ../schema/openapi.yaml -o src/types/schema.d.ts

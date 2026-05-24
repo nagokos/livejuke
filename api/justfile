@@ -1,0 +1,25 @@
+set dotenv-load := true
+
+dev:
+  cargo run --quiet
+
+migrate:
+  sqlx migrate run
+
+migrate-add name:
+  sqlx migrate add -r {{name}}
+
+migrate-rev:
+  sqlx migrate revert
+
+gen-schema:
+  curl -s http://localhost:3000/api-docs/openapi.json | yq -P > ../schema/openapi.yaml
+
+db-doc:
+  tbls doc --config .tbls.yaml --force
+
+db-diff:
+  tbls diff
+
+db-er:
+  tbls doc --force --without-er=false
