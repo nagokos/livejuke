@@ -86,7 +86,7 @@ erDiagram
   timestamp_with_time_zone updated_at
   timestamp_with_time_zone deleted_at
   bigint deleted_by_user_id FK
-  text deletion_reson
+  text deletion_reason
 }
 "public.canonical_releases" {
   uuid release_mbid
@@ -109,7 +109,7 @@ erDiagram
   timestamp_with_time_zone updated_at
   timestamp_with_time_zone deleted_at
   bigint deleted_by_user_id FK
-  text deletion_reson
+  text deletion_reason
 }
 "public.recordings" {
   bigint id
@@ -125,7 +125,7 @@ erDiagram
   timestamp_with_time_zone updated_at
   timestamp_with_time_zone deleted_at
   bigint deleted_by_user_id FK
-  text deletion_reson
+  text deletion_reason
 }
 "public.release_group_secondary_types" {
   bigint id

@@ -25,7 +25,7 @@ db-doc:
   tbls doc --config .tbls.yaml --force
 
 db-diff:
-  tbls diff
+  tbls diff --config .tbls.yaml
 
 db-er:
-  tbls doc --force --without-er=false
+  tbls doc --config .tbls.yaml --force --without-er=false
