@@ -1,8 +1,13 @@
 pub mod access_token_provider;
+pub mod artist_fetcher;
+pub mod artist_image_fetcher;
+pub mod clock;
 pub mod email_sender;
 pub mod id_token_verifier;
 pub mod object_store;
 pub mod refresh_token_provider;
+pub mod release_fetcher;
+pub mod release_group_fetcher;
 pub mod types;
 pub mod upload_session_store;
 pub mod verification_code_store;
